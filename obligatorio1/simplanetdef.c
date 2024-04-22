@@ -51,7 +51,7 @@
 #define periodoMERCURIO (long double)(7600560) // Periodo orbital de Mercurio en segundos
 #define periodoVENUS (long double)(19414167) // Periodo orbital de Venus en segundos
 #define periodoTIERRA (long double)(31558118) // Periodo orbital de la Tierra en segundos
-#define periodoMARTE (long double)(59354294) // Periodo orbital de Marte en segundos
+#define periodoMARTE (long double)(59354293) // Periodo orbital de Marte en segundos
 #define periodoJUPITER (long double)(374335776) // Periodo orbital de Júpiter en segundos
 #define periodoSATURNO (long double)(929595818) // Periodo orbital de Saturno en segundos
 #define periodoURANO (long double)(2651739300) // Periodo orbital de Urano en segundos
