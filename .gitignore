@@ -42,6 +42,7 @@
 *.so.*
 *.dylib
 *.txt
+*.dat
 
 # Executables
 *.exe
