@@ -38,7 +38,7 @@ int main(void)
     N=filas*filas;
 
     //Valor de la temperatura OJO T[0,5]
-    T=5;
+    T=3;
 
     // Asignar memoria para las filas
     s = (int **)malloc((filas+1) * sizeof(int *));
@@ -83,7 +83,7 @@ int main(void)
 for(int k=0;k<=1000; k++)
 {
 //comenzamos un paso de montecarlo (N^2 iteraciones)
-    while(pasomillon<N)
+    for(i=0; i<N ; i++)
     {
     //1.Generar posicion aleatoria en la red
     // Generar un número aleatorio para la fila (n) en el rango [0, filas - 1]
@@ -114,10 +114,8 @@ for(int k=0;k<=1000; k++)
         if (epsilon<p)
         {
            s[n][m]= -s[n][m];
-           pasomillon+=1;
+     
         }
-
-         else pasomillon+=1;
 
          
     }
