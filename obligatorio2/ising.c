@@ -56,7 +56,7 @@ int main(void)
         }
     }
 
-     // Inicializar la matriz (opcional)
+     // Inicializar la matriz (identidad)
   //  for (i = 0; i < filas; i++) {
    //    for (j = 0; j < columnas; j++) {
     //      s[i][j] = 1;
@@ -82,7 +82,7 @@ int main(void)
 //programa
 for(int k=0;k<=1000; k++)
 {
-//comenzamos un paso de montecarlo (N^2 iteraciones)
+//comenzamos un paso de montecarlo (N^2 iteraciones,en este caso N=filas*columnas)
     for(i=0; i<N ; i++)
     {
     //1.Generar posicion aleatoria en la red

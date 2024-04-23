@@ -47,14 +47,14 @@ import numpy as np
 
 # Parámetros
 # ========================================
-file_in = "simplanet.txt" # Nombre del fichero de datos
+file_in = "nplanet.txt" # Nombre del fichero de datos
 file_out = "planetas" # Nombre del fichero de salida (sin extensión)
 
 # Límites de los ejes X e Y
-x_min = -50
-x_max = 50
-y_min = -50 
-y_max = 50
+x_min = -1000000000
+x_max = 1000000000
+y_min = -1000000000
+y_max = 1000000000
 
 interval = 100 # Tiempo entre fotogramas en milisegundos
 show_trail = True # Muestra la "estela" del planeta
