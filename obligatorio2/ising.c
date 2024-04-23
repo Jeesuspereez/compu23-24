@@ -30,25 +30,26 @@ int main(void)
 
     //iniciamos contador pasomillon
     pasomillon=0;
+    energia=0;
 
     // número de filas y columnas de la red OJO AL EMPEZAR EL PUNTERO EN CERO TENEMOS QUE HACER DIM-1
-    filas=9;
-    columnas=9;
+    filas=32;
+    columnas=32;
     N=filas*filas;
 
     //Valor de la temperatura OJO T[0,5]
     T=5;
 
     // Asignar memoria para las filas
-    s = (int **)malloc(filas * sizeof(int *));
+    s = (int **)malloc((filas+1) * sizeof(int *));
     if (s == NULL) {
         printf("Error: no se pudo asignar memoria para las filas\n");
         return 1;
     }
 
     // Asignar memoria para las columnas de cada fila
-    for (i = 0; i <= filas; i++) {
-        s[i] = (int *)malloc(columnas * sizeof(int));
+    for (i = 0; i < columnas+1; i++) {
+        s[i] = (int *)malloc((columnas+1) * sizeof(int));
         if (s[i] == NULL) {
             printf("Error: no se pudo asignar memoria para las columnas de la fila %d\n", i);
             return 1;
@@ -56,21 +57,21 @@ int main(void)
     }
 
      // Inicializar la matriz (opcional)
-    for (i = 0; i <= filas; i++) {
-       for (j = 0; j <= columnas; j++) {
-          s[i][j] = 1;
-        }
-    }
+  //  for (i = 0; i < filas; i++) {
+   //    for (j = 0; j < columnas; j++) {
+    //      s[i][j] = 1;
+    //    }
+  //  }
 
     //llamar a funcion matriz aleatoria
-   // matrizale(s, filas, columnas);
+    matrizale(s, filas, columnas);
 
     //leer la matriz de fichero
 
      // Mostrar la matriz por pantalla
     printf("Matriz inicial:\n");
-    for (i = 0; i <= filas; i++) {
-        for (j = 0; j <= columnas; j++) {
+    for (i = 0; i < filas; i++) {
+        for (j = 0; j < columnas; j++) {
             printf("%d ", s[i][j]);
         }
         printf("\n");
@@ -117,12 +118,14 @@ for(int k=0;k<=1000; k++)
         }
 
          else pasomillon+=1;
+
+         
     }
 
 //mostramos la matriz
-    for (i = 0; i <= filas; i++) {
-        for (j = 0; j <= columnas; j++) {
-             if (j < columnas) {
+    for (i = 0; i < filas; i++) {
+        for (j = 0; j < columnas; j++) {
+             if (j < columnas-1) {
             fprintf(archivo, "%d, ", s[i][j]);
              }
              else  fprintf(archivo, "%d ", s[i][j]);
@@ -137,7 +140,7 @@ fprintf(archivo, "\n");
     fclose(archivo);
 
     // Liberar la memoria
-    for (i = 0; i < filas; i++) {
+    for (i = 0; i < filas+1; i++) {
         free(s[i]);
     }
     free(s);
@@ -156,8 +159,8 @@ double aleatorio()
 void matrizale(int **matriz, int n, int m) {
     int i, j, valor_aleatorio;
     
-    for (i = 0; i <= n; i++) { // Corregir el límite de iteración en función de las filas
-        for (j = 0; j <= m; j++) { // Corregir el límite de iteración en función de las columnas
+    for (i = 0; i < n; i++) { // Corregir el límite de iteración en función de las filas
+        for (j = 0; j < m; j++) { // Corregir el límite de iteración en función de las columnas
             // Generar un número aleatorio entre 0 y 1 y luego convertirlo a +1 o -1
             valor_aleatorio = rand() % 2; // Genera 0 o 1
             matriz[i][j] = valor_aleatorio * 2 - 1; // Convierte 0 a -1 y 1 a +1
