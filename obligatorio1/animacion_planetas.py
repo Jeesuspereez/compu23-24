@@ -47,27 +47,30 @@ import numpy as np
 
 # Parámetros
 # ========================================
-file_in = "nplanet.txt" # Nombre del fichero de datos
-file_out = "planetas" # Nombre del fichero de salida (sin extensión)
+file_in = "simplanet.txt" # Nombre del fichero de datos
+file_out = "planetasheliocentrico" # Nombre del fichero de salida (sin extensión)
 
 # Límites de los ejes X e Y
-x_min = -10000000000000
-x_max = 10000000000000
-y_min = -10000000000000
-y_max = 10000000000000
+x_min = -50
+x_max = 50
+y_min = -50
+y_max = 50
 
-interval = 0.000001 # Tiempo entre fotogramas en milisegundos
+interval = 0.01 # Tiempo entre fotogramas en milisegundos
 show_trail = True # Muestra la "estela" del planeta
 trail_width = 1 # Ancho de la estela
-save_to_file = False # False: muestra la animación por pantalla,
+save_to_file = True # False: muestra la animación por pantalla,
                      # True: la guarda en un fichero
 dpi = 150 # Calidad del vídeo de salida (dots per inch)
 
 # Radio del planeta, en las mismas unidades que la posición
 # Puede ser un número (el radio de todos los planetas) o una lista con
 # el radio de cada uno
-planet_radius = 1 
+planet_radius = 0.1
 #planet_radius = [0.5, 0.7, 1.1]
+#planet_radius = [1, 0.0035, 0.0087, 0.0091, 0.0049, 0.0998,  0.0838, 0.0365, 0.0354, 0.0998] #razon original
+#planet_radius = [10000, 35, 87, 91, 49, 998, 838, 365, 354, 998] #razon por diez mil
+
 
 
 # Lectura del fichero de datos

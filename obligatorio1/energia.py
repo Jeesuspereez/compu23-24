@@ -4,9 +4,15 @@ from scipy.interpolate import CubicSpline
 from scipy.signal import savgol_filter
 
 # Leer datos de los archivos
+#def leer_datos(nombre_archivo):
+ #   with open(nombre_archivo, 'r') as file:
+  #      data = [float(line.strip()) for line in file]
+   # return data
+
+   # Leer datos de los archivos
 def leer_datos(nombre_archivo):
     with open(nombre_archivo, 'r') as file:
-        data = [float(line.strip()) for line in file]
+        data = [float(line.strip()) for line in file if line.strip()]
     return data
 
 # Obtener datos de los archivos
