@@ -1,57 +1,58 @@
+import numpy as np
 import matplotlib.pyplot as plt
+from scipy.interpolate import CubicSpline
+from scipy.signal import savgol_filter
 
-def plot_from_file(filename, label):
-    x_values = []
-    y_values = []
-    with open(filename, 'r') as file:
-        for line in file:
-            # Verificar si la línea está vacía o contiene solo espacios en blanco
-            if line.strip():
-                parts = line.split(',')
-                x_values.append(float(parts[0]))
-                y_values.append(float(parts[1]))
-    plt.plot(x_values, y_values, label=label)
+# Leer datos de los archivos
+def leer_datos(nombre_archivo):
+    with open(nombre_archivo, 'r') as file:
+        data = [float(line.strip()) for line in file]
+    return data
 
-# Graficar desde cada archivo
-plot_from_file('energianplanet.txt', 'Energía')
-plot_from_file('cinetica.txt', 'Cinética')
-plot_from_file('potenciale.txt', 'Potencial')
+# Obtener datos de los archivos
+tiempo = np.array(leer_datos('tiempo.txt'))
+energia_cin = np.array(leer_datos('cinetica.txt'))
+energia_pot = np.array(leer_datos('potenciale.txt'))
 
-# Etiquetas y título
-plt.xlabel('Abscisa')
-plt.ylabel('Energía')
-plt.title('Gráfico de Energía vs Abscisa')
+# Ajustar los datos para que tengan la misma longitud
+min_length = min(len(tiempo), len(energia_cin), len(energia_pot))
+tiempo = tiempo[:min_length]
+energia_cin = energia_cin[:min_length]
+energia_pot = energia_pot[:min_length]
 
-# Ajustar límites de los ejes x e y
-all_x_values = []
-all_y_values = []
-for filename in ['energianplanet.txt', 'cinetica.txt', 'potenciale.txt']:
-    with open(filename, 'r') as file:
-        for line in file:
-            if line.strip():
-                parts = line.split(',')
-                all_x_values.append(float(parts[0]))
-                all_y_values.append(float(parts[1]))
+# Crear el gráfico
+plt.figure(figsize=(18, 12))
 
-# Calcular el rango de los valores de los ejes x e y
-x_range = max(all_x_values) - min(all_x_values)
-y_range = max(all_y_values) - min(all_y_values)
+# Interpolación de spline cúbico
+spline_cin = CubicSpline(tiempo, energia_cin)
+spline_pot = CubicSpline(tiempo, energia_pot)
 
-# Calcular el rango máximo entre los ejes x e y
-max_range = max(x_range, y_range)
+# Evaluar las interpolaciones en un rango suave de tiempo
+tiempo_smooth = np.linspace(tiempo.min(), tiempo.max(), 300)
+energia_cin_smooth = spline_cin(tiempo_smooth)
+energia_pot_smooth = spline_pot(tiempo_smooth)
 
-# Establecer los límites de los ejes x e y centrados en cero
-plt.xlim(0, max_range*1000000)
-plt.ylim(-max_range*1000000/2, 1000000*max_range/2)
+# Calcular la suma de las dos curvas
+energia_total_smooth = energia_cin_smooth + energia_pot_smooth
 
-# Ajustar la posición del eje x en la mitad de la figura
-plt.gca().spines['bottom'].set_position(('data', 0))
+# Aplicar un suavizado adicional a la curva azul
+energia_total_smooth = savgol_filter(energia_total_smooth, window_length=31, polyorder=3)
 
-# Mostrar la leyenda
-plt.legend()
+# Graficar las curvas resultantes
+plt.plot(tiempo_smooth, energia_cin_smooth, label='Energía cinética', color='green')
+plt.plot(tiempo_smooth, energia_pot_smooth, label='Energía potencial', color='red')
 
-# Mostrar la gráfica
+# Graficar la curva suavizada de la energía total
+plt.plot(tiempo_smooth, energia_total_smooth, label='Energía total', color='blue')
+
+# Etiquetas y leyenda
+plt.xlabel('Tiempo', fontsize=25)
+plt.ylabel('Energía', fontsize=25)
+plt.title('Conservación de la energía', fontsize=25)
+plt.legend(loc='best', fontsize=20)
+
+# Ajustes estéticos
 plt.grid(True)
+plt.tick_params(axis="both", labelsize=20, labelrotation=0, labelcolor="black")
+
 plt.show()
-
-
