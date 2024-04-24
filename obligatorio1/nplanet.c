@@ -115,8 +115,8 @@ int main(void)
     double h, t;
 
       //definimos el paso
-    h=0.001;
-    t=1000;
+    h=0.01;
+    t=100;
     step=t/h;
 
  //numero de planetas filas=N+1 donde N es nº planetas ojo cuenta con el sol
@@ -271,6 +271,14 @@ corriget(v_y, filas);
         corriger(r_x, filas);
         corriger(r_y, filas);
 
+        //reescalo V para escribirlo en el fichero
+     /*   corriger(v_x, filas); //velocidad eje x
+        reesct(v_x, filas);
+        corriger(v_y, filas);  //velocidad eje y
+        reesct(v_y, filas);
+
+        */
+
          //imprimo posiciones nuevas
          for(k=0; k<filas; k++)
         {
@@ -279,27 +287,11 @@ corriget(v_y, filas);
         }
         fprintf(archivo, "\n");
 
-        //calculamos periodo
-      /*   for(int i = 1; i < filas; i++)
-        {
-            if((r_y[i] < 0) && (period[i]==0))
-            {
-                period[i] = 2*a;
-                period[i] = period[i] / (sqrt((G * masaSOL) / pow(c, 3)));
-                printf("El periodo de %d es %Lfs\n", i, period[i]/100);
-            }
-        }
-        */
-
-        //reescalamos r de nuevo
-        rescr(r_x, filas);
-        rescr(r_y, filas);
-
-//calculamos energia y momento angular total
-    V=potencial(m, r_x, r_y, a_x, a_y,filas);
-    T=cinetica(m, v_x, v_y,filas);
-    energiatotal= T+V;
-    momentoang= mangular(m, r_x, r_y,  v_x, v_y, filas);
+        //calculamos energia y momento angular total
+        V=potencial(m, r_x, r_y, a_x, a_y,filas);
+        T=cinetica(m, v_x, v_y, filas);
+        energiatotal= T+V;
+        momentoang= mangular(m, r_x, r_y,  v_x, v_y, filas);
 
         //escribimos etotal en el fichero
              fprintf(archivo_, "%.10Lf", g);
@@ -320,6 +312,28 @@ corriget(v_y, filas);
          fprintf(archivo__, "%.10Lf", g);
            fprintf(archivo__, ", %.10Lf\n", momentoang);
         fprintf(archivo__, "\n");
+
+        //calculamos periodo
+      /*   for(int i = 1; i < filas; i++)
+        {
+            if((r_y[i] < 0) && (period[i]==0))
+            {
+                period[i] = 2*a;
+                period[i] = period[i] / (sqrt((G * masaSOL) / pow(c, 3)));
+                printf("El periodo de %d es %Lfs\n", i, period[i]/100);
+            }
+        }
+        */
+
+        //reescalamos r de nuevo
+        rescr(r_x, filas);
+        rescr(r_y, filas);
+
+        //reescalamos v de nuevo
+       /* rescr(v_x, filas); //velocidad eje x
+        corriget(v_x, filas);
+        rescr(v_y, filas);  //velocidad eje y
+        corriget(v_y, filas);*/
 
                g=g+1;
     }
@@ -522,19 +536,12 @@ L=0;
 long double cinetica(long double *masa, long double *velx, long double *vely, int n)
 {
     int i;
-    long double cinetica[n], kinetic;
+    long double kinetic;
     kinetic=0;
-
-   //iniciamosvector cinetica
-for(int i=0; i<n; i++)
-    {
-      cinetica[i] = 0;
-    }
 
     for(int i=1; i<n; i++)
     {
-      cinetica[i] += 1/2 * masa[i] * (pow(velx[i], 2) + pow(vely[i], 2));
-      kinetic+=  cinetica[i];
+     kinetic += 1/2 * masa[i] * (pow(velx[i], 2) + pow(vely[i], 2));
     }
 
     return kinetic;
