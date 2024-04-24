@@ -72,7 +72,9 @@ void aceleracion(long double *aceleracion, long double *masa, long double *posx,
 void calculopos(long double *pos, long double *vel, long double *acel, double h, int n);
 void calculov(long double *velocidad, long double *aux, long double *acel, double h, int n);
 void calculow(long double *aux, long double *vel, long double *acel, double h, int n);
-long double energia(long double *masa, long double *posx, long double *posy,  long double *velx, long double *vely, long double *acelx, long double *acely,int n);
+//long double energia(long double *masa, long double *posx, long double *posy,  long double *velx, long double *vely, long double *acelx, long double *acely,int n);
+long double cinetica(long double *masa, long double *velx, long double *vely, int n);
+long double potencial(long double *masa, long double *posx, long double *posy, long double *acelx, long double *acely,int n);
 long double mangular(long double *masa, long double *posx, long double *posy, long double *velx, long double *vely, int n);
 
 int main(void) 
@@ -82,8 +84,18 @@ int main(void)
     char simplanet[] = "nplanet.txt";
     archivo = fopen(simplanet, "w");
 
-     //abrimos fichero energia 
- FILE *archivo_;
+     //abrimos fichero cinetica
+    FILE *archivo_cinetica;
+    char cinetic[] = "cinetica.txt";
+    archivo_cinetica = fopen(cinetic, "w");
+
+    //abrimos fichero potencial
+    FILE *archivo_potenciale;
+    char potenciale[] = "potenciale.txt";
+    archivo_potenciale = fopen(potenciale, "w");
+
+    //abrimos fichero energia total
+    FILE *archivo_;
     char conservacion[] = "energianplanet.txt";
     archivo_ = fopen(conservacion, "w");
 
@@ -92,14 +104,19 @@ int main(void)
     char momentoangular[] = "angularnplanet.txt";
     archivo__ = fopen(momentoangular, "w");
 
+    //abrimos archivo excentricidad y periodo
+    FILE *archivo___;
+    char excperiod[] = "excperiodnplanet.txt";
+    archivo___ = fopen(excperiod, "w");
+
   //definicion de variables
     int i, step, filas, j, k, N;
-    long double *m, *r_x, *r_y, *v_x, *v_y,*w_x, *w_y ,*a_x, *a_y, *period, *periodref,*exc,energiatotal, momentoang, g, auxp, errorr, incd;
+    long double *m, *r_x, *r_y, *v_x, *v_y,*w_x, *w_y ,*a_x, *a_y, *period, *periodref,*exc,energiatotal, momentoang, g, auxp, errorr, incd, V, T;
     double h, t;
 
       //definimos el paso
-    h=0.01;
-    t=100;
+    h=0.001;
+    t=1000;
     step=t/h;
 
  //numero de planetas filas=N+1 donde N es nº planetas ojo cuenta con el sol
@@ -227,7 +244,7 @@ corriget(v_y, filas);
     g=0;
 
     //llamar a energia total una vez 
-    energiatotal= energia(m, r_x, r_y,  v_x, v_y, a_x, a_y, filas);
+   // energiatotal= energia(m, r_x, r_y,  v_x, v_y, a_x, a_y, filas);
     momentoang = mangular(m, r_x, r_y, v_x, v_y, filas);
 
     //llamar al algortimo de verlet
@@ -262,7 +279,8 @@ corriget(v_y, filas);
         }
         fprintf(archivo, "\n");
 
-         for(int i = 1; i < filas; i++)
+        //calculamos periodo
+      /*   for(int i = 1; i < filas; i++)
         {
             if((r_y[i] < 0) && (period[i]==0))
             {
@@ -271,19 +289,32 @@ corriget(v_y, filas);
                 printf("El periodo de %d es %Lfs\n", i, period[i]/100);
             }
         }
+        */
 
         //reescalamos r de nuevo
         rescr(r_x, filas);
         rescr(r_y, filas);
 
 //calculamos energia y momento angular total
-    energiatotal= energia(m, r_x, r_y,  v_x, v_y, a_x, a_y,filas);
+    V=potencial(m, r_x, r_y, a_x, a_y,filas);
+    T=cinetica(m, v_x, v_y,filas);
+    energiatotal= T+V;
     momentoang= mangular(m, r_x, r_y,  v_x, v_y, filas);
 
         //escribimos etotal en el fichero
              fprintf(archivo_, "%.10Lf", g);
            fprintf(archivo_, ", %.10Lf\n", energiatotal);
         fprintf(archivo_, "\n");
+
+        //escribimos cinetica en el fichero
+         fprintf(archivo_cinetica, "%.10Lf", g);
+           fprintf(archivo_cinetica, ", %.10Lf\n", T);
+        fprintf(archivo_cinetica, "\n");
+
+        //escribimos potencial en el fichero
+         fprintf(archivo_potenciale, "%.10Lf", g);
+           fprintf(archivo_potenciale, ", %.10Lf\n", V);
+        fprintf(archivo_potenciale, "\n");
 
         //escribimos momento angular en el fichero
          fprintf(archivo__, "%.10Lf", g);
@@ -294,7 +325,7 @@ corriget(v_y, filas);
     }
 
     //vemos el error relativo del periodo
-    for(i=1;i<filas;i++)
+   /* for(i=1;i<filas;i++)
     {
         auxp=0;
         if(period[i]>periodref[i])
@@ -308,12 +339,15 @@ corriget(v_y, filas);
 
        printf("El error relativo de %d es %Lf%%\n", i, errorr);
     }
+    */
 
     //vemos la excentricidad de cada orbita
     for(i=1; i<filas;i++)
     {
     exc[i]=sqrt(1+(2*energiatotal*momentoang*momentoang)/(G*G*masaSOL*masaSOL*m[i]*m[i]*m[i]));
-     printf("La excentricidad de %d es %Lf\n", i, exc[i]);
+   //  printf("La excentricidad de %d es %Lf\n", i, exc[i]);
+        fprintf(archivo___,"La excentricidad de %d es %Lf\n", i, exc[i]);
+        fprintf(archivo___,"El periodo de %d es %Lf\n", i, period[i]);
     }
 
     // Liberar la memoria asignada para los vectores
@@ -330,10 +364,13 @@ corriget(v_y, filas);
     free(periodref);
     free(exc);
 
-    //cerramos fichero
+    //cerramos ficheros
  fclose(archivo);
  fclose(archivo_);
  fclose(archivo__);
+ fclose(archivo___);
+ fclose(archivo_cinetica);
+ fclose(archivo_potenciale);
 
     return 0;
 }
@@ -443,7 +480,7 @@ void calculopos(long double *pos, long double *vel, long double *acel, double h,
 
     }
 }
-
+/*
 long double energia(long double *masa, long double *posx, long double *posy,  long double *velx, long double *vely, long double *acelx, long double *acely,int n)
 {
     long double cinetica[n], potencial[n];
@@ -466,8 +503,10 @@ for(int i=0; i<n; i++)
     }
 
     return energiaa;
-}
+} 
+    */
 
+//funcion que calcula el momento angular total
 long double mangular(long double *masa, long double *posx, long double *posy, long double *velx, long double *vely, int n)
 {
 long double L;
@@ -477,4 +516,49 @@ L=0;
         L += masa[i] * sqrt(pow(posx[i], 2) + pow(posy[i], 2)) * sqrt(pow(velx[i], 2) + pow(vely[i], 2));
     }
     return L;
+}
+
+//funcion que calcula energia cinetica total
+long double cinetica(long double *masa, long double *velx, long double *vely, int n)
+{
+    int i;
+    long double cinetica[n], kinetic;
+    kinetic=0;
+
+   //iniciamosvector cinetica
+for(int i=0; i<n; i++)
+    {
+      cinetica[i] = 0;
+    }
+
+    for(int i=1; i<n; i++)
+    {
+      cinetica[i] += 1/2 * masa[i] * (pow(velx[i], 2) + pow(vely[i], 2));
+      kinetic+=  cinetica[i];
+    }
+
+    return kinetic;
+}
+
+//funcion que calcula la energia potencial total
+long double potencial(long double *masa, long double *posx, long double *posy, long double *acelx, long double *acely,int n)
+{
+    long double potencial[n];
+   long double pot=0;
+
+   //iniciamosvector cinetica y potencial
+
+for(int i=0; i<n; i++)
+    {
+     potencial[i] = 0;
+    }
+
+    for(int i=1; i<n; i++)
+    {
+     
+     potencial[i] += -masa[i] * sqrt(pow(posx[i], 2) + pow(posy[i], 2)) * sqrt(pow(acelx[i], 2) + pow(acely[i], 2));
+     pot+=  potencial[i];
+    }
+
+    return pot;
 }

@@ -51,12 +51,12 @@ file_in = "nplanet.txt" # Nombre del fichero de datos
 file_out = "planetas" # Nombre del fichero de salida (sin extensión)
 
 # Límites de los ejes X e Y
-x_min = -1000000000
-x_max = 1000000000
-y_min = -1000000000
-y_max = 1000000000
+x_min = -10000000000000
+x_max = 10000000000000
+y_min = -10000000000000
+y_max = 10000000000000
 
-interval = 100 # Tiempo entre fotogramas en milisegundos
+interval = 0.000001 # Tiempo entre fotogramas en milisegundos
 show_trail = True # Muestra la "estela" del planeta
 trail_width = 1 # Ancho de la estela
 save_to_file = False # False: muestra la animación por pantalla,
