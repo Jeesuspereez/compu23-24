@@ -116,7 +116,7 @@ int main(void)
     //con pluto filas=10;
    
     //definimos
-    h=0.001;
+    h=0.01;
     t=100;
     step=t/h;
 
