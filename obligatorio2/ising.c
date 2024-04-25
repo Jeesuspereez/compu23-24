@@ -33,12 +33,12 @@ int main(void)
     energia=0;
 
     // número de filas y columnas de la red OJO AL EMPEZAR EL PUNTERO EN CERO TENEMOS QUE HACER DIM-1
-    filas=32;
-    columnas=32;
+    filas=64;
+    columnas=64;
     N=filas*filas;
 
     //Valor de la temperatura OJO T[0,5]
-    T=3;
+    T=1;
 
     // Asignar memoria para las filas
     s = (int **)malloc((filas+1) * sizeof(int *));
