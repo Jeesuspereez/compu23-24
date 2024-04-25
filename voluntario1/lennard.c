@@ -11,54 +11,8 @@
 //libreria que optimiza bucles
 #include <omp.h>
 
-#define c (long double)(1.496 * pow(10, 11)) // Unidad astronómica en metros
-#define G (long double)(6.674 * pow(10, -11)) // Constante de gravitación universal en m^3 kg^-1 s^-2
-
-#define masaSOL (long double)(1.99 * pow(10, 30)) // Masa del sol en kg
-#define masaMER (long double)(3.301 * pow(10, 23)) // Masa de mercurio en kg
-#define masaVEN (long double)(4.867 * pow(10, 24)) // Masa de venus en kg
-#define masaTIE (long double)(5.972 * pow(10, 24)) // Masa de la tierra en kg
-#define masaMAR (long double)(6.417 * pow(10, 23)) // Masa de marte en kg
-#define masaJUP (long double)(1.898 * pow(10, 27)) // Masa de jupiter en kg
-#define masaMARS (long double)(6.417 * pow(10, 23)) // Masa de Marte en kg
-#define masaSATURN (long double)(5.683 * pow(10, 26)) // Masa de Saturno en kg
-#define masaURANUS (long double)(8.681 * pow(10, 25)) // Masa de Urano en kg
-#define masaNEPTUNE (long double)(1.024 * pow(10, 26)) // Masa de Neptuno en kg
-#define masaPLUTO (long double)(1.309 * pow(10, 22)) // Masa de Plutón en kg
-
-#define DMER (long double)(57.9 * pow(10, 9)) // Distancia de mercurio al sol en metros
-#define DVEN (long double)(108.2 * pow(10, 9)) // Distancia de venus al sol en metros
-#define DTIE (long double)(149.6 * pow(10, 9)) // Distancia de la tierra al sol en metros
-#define DMAR (long double)(227.9 * pow(10, 9)) // Distancia de marte al sol en metros^
-#define DJUP (long double)(7.78 * pow(10, 11)) // Distancia de jupiter al sol en metros
-#define DMARS (long double)(227.9 * pow(10, 9)) // Distancia de Marte al Sol en metros
-#define DSATURN (long double)(1.429 * pow(10, 12)) // Distancia de Saturno al Sol en metros
-#define DURANUS (long double)(2.871 * pow(10, 12)) // Distancia de Urano al Sol en metros
-#define DNEPTUNE (long double)(4.495 * pow(10, 12)) // Distancia de Neptuno al Sol en metros
-#define DPLUTO (long double)(5.906 * pow(10, 12)) // Distancia de Plutón al Sol en metros
-
-
-#define VMER (long double)(47.87 * pow(10, 3)) // Velocidad de mercurio en m/s
-#define VVEN (long double)(35.02 * pow(10, 3)) // Velocidad de venus en m/s
-#define VTIE (long double)(29.78 * pow(10, 3)) // Velocidad de la tierra en m/s
-#define VMAR (long double)(24.077 * pow(10, 3)) // Velocidad de marte en m/s
-#define VJUP (long double)(13.07 * pow(10, 3)) // Velocidad de jupiter en m/s
-#define VMARS (long double)(24.077 * pow(10, 3)) // Velocidad de Marte en m/s
-#define VSATURN (long double)(9.69 * pow(10, 3)) // Velocidad de Saturno en m/s
-#define VURANUS (long double)(6.8 * pow(10, 3)) // Velocidad de Urano en m/s
-#define VNEPTUNE (long double)(5.43 * pow(10, 3)) // Velocidad de Neptuno en m/s
-#define VPLUTO (long double)(4.74 * pow(10, 3)) // Velocidad de Plutón en m/s
-
-//definimos periodos orbitales
-#define periodoMERCURIO (long double)(7600560) // Periodo orbital de Mercurio en segundos
-#define periodoVENUS (long double)(19414167) // Periodo orbital de Venus en segundos
-#define periodoTIERRA (long double)(31558118) // Periodo orbital de la Tierra en segundos
-#define periodoMARTE (long double)(59354293) // Periodo orbital de Marte en segundos
-#define periodoJUPITER (long double)(374335776) // Periodo orbital de Júpiter en segundos
-#define periodoSATURNO (long double)(929595818) // Periodo orbital de Saturno en segundos
-#define periodoURANO (long double)(2651739300) // Periodo orbital de Urano en segundos
-#define periodoNEPTUNO (long double)(5200418592) // Periodo orbital de Neptuno en segundos
-#define periodoPLUTON (long double)(7800372000) // Periodo orbital de Plutón en segundos
+#define Argonmass (long double)(6.6335209 * pow(10, -26)) // Masa en kg
+#define Armstrong (long double)(1 * pow(10, -10)) // Armstrong en metros
 
 //Declaracion de funciones
 void rescm(long double *masa, int n);
@@ -141,27 +95,9 @@ int main(void)
     a_x = (long double *) malloc(filas * sizeof(long double));
     a_y = (long double *) malloc(filas * sizeof(long double));
 
-     //Asignar memoria a vectores periodo y excentricidad
-    period = (long double *) malloc(filas * sizeof(long double));
-    periodref = (long double *) malloc(filas * sizeof(long double));
-     exc = (long double *) malloc(filas * sizeof(long double));
 
-    // Inicialización de los vectores existentes con las distancias, masas y velocidades y periodo
-//inicializo vector periodo de referencia con el que se calculara el error relativo
-periodref[0] = 0;
-periodref[1] = periodoMERCURIO;
-periodref[2] = periodoVENUS;
-periodref[3] = periodoTIERRA;
-periodref[4] = periodoMARTE;
-periodref[5] = periodoJUPITER;
-periodref[6] = periodoSATURNO;
-periodref[7] = periodoURANO;
-periodref[8] = periodoNEPTUNO;
-periodref[9] = periodoPLUTON;  
 
-// r_x: Distancias de los planetas al Sol en metros
-incd=DPLUTO-DNEPTUNE; // distancia que van a tener entre los N planetas
-
+// distancia que van a tener entre los N planetas
 r_x[0] = 0;
 r_x[1] = DMER;
 r_x[2] = DVEN;
@@ -228,7 +164,6 @@ corriget(v_y, filas);
         a_y[i]=0; 
         w_x[i]=0;
         w_y[i]=0;
-        period[i]=0;
      }
     
     //llamar a la aceleracion para la primera iteracion
@@ -259,13 +194,6 @@ corriget(v_y, filas);
         corriger(r_x, filas);
         corriger(r_y, filas);
 
-        //reescalo V para escribirlo en el fichero
-     /*   corriger(v_x, filas); //velocidad eje x
-        reesct(v_x, filas);
-        corriger(v_y, filas);  //velocidad eje y
-        reesct(v_y, filas);
-
-        */
 
          //imprimo posiciones nuevas
          for(k=0; k<filas; k++)
@@ -313,9 +241,6 @@ corriget(v_y, filas);
     free(w_y);
     free(a_x);
     free(a_y);
-    free(period);
-    free(periodref);
-    free(exc);
 
     //cerramos ficheros
  fclose(archivo);
