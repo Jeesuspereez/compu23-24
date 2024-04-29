@@ -270,8 +270,8 @@ corriget(v_y, filas);
         }
 
         //reescalamos r de nuevo
-    //    rescr(r_x, filas);
-      //  rescr(r_y, filas);
+        rescr(r_x, filas);
+        rescr(r_y, filas);
 
   //calculamos energia y momento angular total
         V=potencial(m, r_x, r_y, a_x, a_y,filas);
