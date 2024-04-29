@@ -23,7 +23,8 @@ double potencial(double *masa, double *posx, double *posy, double *acelx, double
 double mangular(double *masa, double *posx, double *posy, double *velx, double *vely, int n);
 void generar_posiciones(double *pos_x, double *pos_y, int dimension, int tamano_red);
 void generar_velocidades(double *velx, double *vely, int dimension);
-void imprimirCoordenadas(double x[], double y[], int n);
+void imprimirCoordenadas(double *x, double *y, int n);
+void contorno(double *pos, int tampart, int longitud);
 
 int main(void)
 {
@@ -57,11 +58,11 @@ int main(void)
     sigma = 1;
     epsilon = 1;
     L = 10;
-    N = 10;
-    filas = N;
+    N = 5;
+    filas = 5;
 
     // Asignando memoria para los vectores
-    m = (double *)malloc(filas * sizeof(double));
+    m = (double *)malloc((filas) * sizeof(double));
     r_x = (double *)malloc(filas * sizeof(double));
     r_y = (double *)malloc(filas * sizeof(double));
     v_x = (double *)malloc(filas * sizeof(double));
@@ -74,10 +75,13 @@ int main(void)
     // Inicializando aceleraciones a cero
     for (i = 0; i < filas; i++)
     {
+        m[i]=0;
         r_x[i] = 0;
         r_y[i] = 0;
         v_x[i] = 0;
         v_y[i] = 0;
+        w_x[i] = 0;
+        w_y[i] = 0;
         a_x[i] = 0;
         a_y[i] = 0;
         
@@ -117,6 +121,9 @@ int main(void)
     /* ALGORITMO DE VERLET */
     for (t = 0; t < 100; t++)
     {
+        //aplicamos condiciones de contorno
+        contorno(r_x, N, L);
+        contorno(r_y, N, L);
 
         // Calculando nuevas posiciones
         calculopos(r_x, v_x, a_x, t, filas);
@@ -141,8 +148,8 @@ int main(void)
         //imprimo posiciones nuevas
          for(k=0; k<filas; k++)
         {
-            fprintf(archivo, "%.10Lf", r_x[k]);
-            fprintf(archivo, ", %.10Lf\n", r_y[k]);
+            fprintf(archivo, "%.10f", r_x[k]);
+            fprintf(archivo, ", %.10f\n", r_y[k]);
         }
         fprintf(archivo, "\n");
 
@@ -292,7 +299,7 @@ double potencial(double *masa, double *posx, double *posy, double *acelx, double
     return pot;
 }
 
-void generar_posiciones(double *pos_x, double *pos_y, int dimension, int tamano_red)
+/*void generar_posiciones(double *pos_x, double *pos_y, int dimension, int tamano_red)
  {
     // Número máximo de celdas en la red cuadrada
     int num_celdas = tamano_red * tamano_red;
@@ -330,6 +337,15 @@ void generar_posiciones(double *pos_x, double *pos_y, int dimension, int tamano_
         pos_y[i] = (double)fila + ((double)rand() / RAND_MAX);    // Posición y aleatoria entre fila y fila+1
     }
 }
+*/
+void generar_posiciones(double *pos_x, double *pos_y, int dimension, int tamano_red)
+{
+int i;
+    for(i=0;i<dimension;i++){
+    pos_x[i]=i+1;
+    pos_y[i]=0;
+    }
+}
 
 void generar_velocidades(double *velx, double *vely, int dimension)
 {
@@ -344,18 +360,35 @@ void generar_velocidades(double *velx, double *vely, int dimension)
 }
 
 // Función para imprimir las coordenadas (x, y) como una matriz
-void imprimirCoordenadas(double x[], double y[], int n)
+void imprimirCoordenadas(double *x, double *y, int n)
  {
-    // Verificar si los vectores tienen la misma longitud
-    if (n <= 0) {
-        printf("Los vectores están vacíos.\n");
-        return;
-    }
-
     // Imprimir las coordenadas como una matriz
     printf("Coordenadas:\n");
     for (int i = 0; i < n; i++) {
         printf("(%.2f, %.2f)\n", x[i], y[i]);
     }
 }
+
+void contorno(double *pos, int tampart, int longitud)
+ {
+
+int i, k;
+
+    for(i=0; i< tampart; i++)
+    {        
+        if (pos[i]>longitud)
+        {
+            k=floor(pos[i]/longitud);
+            pos[i]= pos[i] - k*longitud;
+        }
+            else if(pos[i]<0){
+            k= floor(-pos[i]/longitud);
+            pos[i]= longitud -k;
+            }
+        else pos[i]=pos[i];
+    }
+
+ }
+
+//se podria hacer una funcion para ver la distancia al eje x y al eje y y compararla con la distancia entre particulas y quedarnos con la menor.
 
