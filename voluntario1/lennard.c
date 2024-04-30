@@ -58,8 +58,8 @@ int main(void)
     sigma = 1;
     epsilon = 1;
     L = 10;
-    N = 5;
-    filas = 5;
+    N = 10;
+    filas = 10;
 
     // Asignando memoria para los vectores
     m = (double *)malloc((filas) * sizeof(double));
@@ -109,25 +109,27 @@ int main(void)
    /* rescr(v_y, sigma, filas);
     corriget(v_y, filas);*/
 
+   //mostramos vectores posiciones por pantalla a ver si esta bien
     imprimirCoordenadas(r_x, r_y, filas);
 
     // Calculando aceleraciones para la primera iteración
     aceleracion(a_x, r_x, r_y, L, filas);
     aceleracion(a_y, r_y, r_x, L, filas); 
 
-    //mostramos vectores posiciones por pantalla a ver si esta bien
+ 
 
 
     /* ALGORITMO DE VERLET */
     for (t = 0; t < 100; t++)
     {
-        //aplicamos condiciones de contorno
-        contorno(r_x, N, L);
-        contorno(r_y, N, L);
 
         // Calculando nuevas posiciones
         calculopos(r_x, v_x, a_x, t, filas);
         calculopos(r_y, v_y, a_y, t, filas);
+
+        //aplicamos condiciones de contorno
+        contorno(r_x, N, L);
+        contorno(r_y, N, L);
 
         // Calculando w
         calculow(w_x, v_x, a_x, t, filas);
@@ -299,7 +301,7 @@ double potencial(double *masa, double *posx, double *posy, double *acelx, double
     return pot;
 }
 
-/*void generar_posiciones(double *pos_x, double *pos_y, int dimension, int tamano_red)
+void generar_posiciones(double *pos_x, double *pos_y, int dimension, int tamano_red)
  {
     // Número máximo de celdas en la red cuadrada
     int num_celdas = tamano_red * tamano_red;
@@ -337,15 +339,15 @@ double potencial(double *masa, double *posx, double *posy, double *acelx, double
         pos_y[i] = (double)fila + ((double)rand() / RAND_MAX);    // Posición y aleatoria entre fila y fila+1
     }
 }
-*/
-void generar_posiciones(double *pos_x, double *pos_y, int dimension, int tamano_red)
+
+/*void generar_posiciones(double *pos_x, double *pos_y, int dimension, int tamano_red)
 {
 int i;
     for(i=0;i<dimension;i++){
     pos_x[i]=i+1;
     pos_y[i]=0;
     }
-}
+}*/
 
 void generar_velocidades(double *velx, double *vely, int dimension)
 {
@@ -376,6 +378,7 @@ int i, k;
 
     for(i=0; i< tampart; i++)
     {        
+        k=0;
         if (pos[i]>longitud)
         {
             k=floor(pos[i]/longitud);
@@ -383,7 +386,11 @@ int i, k;
         }
             else if(pos[i]<0){
             k= floor(-pos[i]/longitud);
-            pos[i]= longitud -k;
+     //       pos[i]= pos[i] + longitud -k*longitud;
+      // pos[i]=  longitud -k;
+      //pos[i] - k*longitud
+       pos[i]= longitud +pos[i] - k*longitud;
+
             }
         else pos[i]=pos[i];
     }
