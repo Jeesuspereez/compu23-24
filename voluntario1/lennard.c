@@ -54,12 +54,14 @@ int main(void)
     double *m, *r_x, *r_y, *v_x, *w_x, *w_y, *v_y, *a_x, *a_y, t, h;
 
     t = 0;
-    h=0.001;
+    h=0.001; //paso
     sigma = 1;
     epsilon = 1;
-    L = 10;
-    N = 10;
-    filas = 10;
+
+ 
+    L = 10;  //tamaño de la caja
+    N = 20; //numero de particulas
+    filas=N; 
 
     // Asignando memoria para los vectores
     m = (double *)malloc((filas) * sizeof(double));
