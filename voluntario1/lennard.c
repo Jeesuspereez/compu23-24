@@ -9,6 +9,7 @@
 
 #define Argonmass (6.6335209 * pow(10, -26)) // Masa en kg
 #define Armstrong (1 * pow(10, -10)) // Armstrong en metros
+#define PI (3.1415926535897932384)
 
 // Declaración de funciones
 void rescm(double *masa, int n);
@@ -21,7 +22,7 @@ void calculow(double *aux, double *vel, double *acel, double h, int n);
 double cinetica(double *masa, double *velx, double *vely, int n);
 double potencial(double *masa, double *posx, double *posy, double *acelx, double *acely, int n);
 double mangular(double *masa, double *posx, double *posy, double *velx, double *vely, int n);
-void generar_posiciones(double *pos_x, double *pos_y, int dimension, int tamano_red);
+void generar_posiciones(double *posx, double *posy, int dimension, int longitud);
 void generar_velocidades(double *velx, double *vely, int dimension);
 void imprimirCoordenadas(double *x, double *y, int n);
 void contorno(double *pos, int tampart, int longitud);
@@ -54,7 +55,7 @@ int main(void)
     double *m, *r_x, *r_y, *v_x, *w_x, *w_y, *v_y, *a_x, *a_y, t, h;
 
     t = 0;
-    h=0.001; //paso
+    h=0.002; //paso
     sigma = 1;
     epsilon = 1;
 
@@ -218,6 +219,34 @@ void corriger(double *pos, int sig, int n)
     }
 }
 
+
+void aceleracion(double *aceleracion, double *posx, double *posy, int L, int n)
+{
+    double distx, disty, distancia;
+    for (int i = 0; i < n; i++)
+    {
+        aceleracion[i] = 0;
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            if (i != j)
+            {
+                distx = posx[i] - posx[j];
+		        disty = posy[i] - posy[j];
+		   //     distx = distx - round(distx/(2*L))*(2.*L);
+		    //    disty = disty - round(disty/(2*L))*(2.*L);
+                distancia = sqrt(distx * distx + disty * disty);
+                aceleracion[i] += ((posx[i] - posx[j])/distancia)*24 * (2.0 / pow(distancia, 13) - 1.0 / pow(distancia, 7));
+            }
+        }
+    }
+}
+
+
+/*
 // Función para calcular aceleración
 void aceleracion(double *aceleracion, double *posx, double *posy, int L, int n)
 {
@@ -243,6 +272,7 @@ void aceleracion(double *aceleracion, double *posx, double *posy, int L, int n)
         }
     }
 }
+*/
 
 // Funciones auxiliares para calcular velocidad
 void calculow(double *aux, double *vel, double *acel, double h, int n)
@@ -303,6 +333,28 @@ double potencial(double *masa, double *posx, double *posy, double *acelx, double
     return pot;
 }
 
+void generar_posiciones(double *posx, double *posy, int dimension, int longitud)
+{   
+    int n,m, i, j;
+
+    for(i = 0; i < dimension; i++) {
+        do {
+            posx[i] = ((double)rand() / RAND_MAX) * (longitud - 2) + 1;
+            posy[i] = ((double)rand() / RAND_MAX) * (longitud - 2) + 1;
+
+            for(j = 0; j < i; j++) {
+                double distancia_x = posx[i] - posx[j];
+                double distancia_y = posy[i] - posy[j];
+                double distancia_entre_particulas = sqrt(distancia_x * distancia_x + distancia_y * distancia_y);
+                if(distancia_entre_particulas < 1.5) {
+                    break;
+                }
+            }
+        } while(j < i);
+    }
+}
+
+/*
 void generar_posiciones(double *pos_x, double *pos_y, int dimension, int tamano_red)
  {
     // Número máximo de celdas en la red cuadrada
@@ -341,6 +393,7 @@ void generar_posiciones(double *pos_x, double *pos_y, int dimension, int tamano_
         pos_y[i] = (double)fila + ((double)rand() / RAND_MAX);    // Posición y aleatoria entre fila y fila+1
     }
 }
+*/
 
 /*void generar_posiciones(double *pos_x, double *pos_y, int dimension, int tamano_red)
 {
@@ -354,12 +407,13 @@ int i;
 void generar_velocidades(double *velx, double *vely, int dimension)
 {
     int valor_aleatorio, valor_aleatorio2, i;
+    double theta, r;
+    r=1.;
 
     for(i=0; i<dimension; i++){
-    valor_aleatorio =   rand() % 2; // Genera 0 o 1
-    valor_aleatorio2=  rand() % 2;
-    velx[i] = valor_aleatorio * 2 - 1; // Convierte 0 a -1 y 1 a +1
-    vely[i]= valor_aleatorio2*2 -1;
+    theta=2.*PI*rand()/RAND_MAX;
+    velx[i] = r*cos(theta); 
+    vely[i]= r*sin(theta);
     }
 }
 
@@ -375,7 +429,6 @@ void imprimirCoordenadas(double *x, double *y, int n)
 
 void contorno(double *pos, int tampart, int longitud)
  {
-
 int i, k;
 
     for(i=0; i< tampart; i++)
@@ -383,7 +436,7 @@ int i, k;
         k=0;
         if (pos[i]>longitud)
         {
-            k=floor(pos[i]/longitud);
+            k=floor(pos[i]/longitud); //la funcion floor devuelve el resto real de la fraccion por ej pos=2.5L --> floor(pos/long)=.5
             pos[i]= pos[i] - k*longitud;
         }
             else if(pos[i]<0){
@@ -391,7 +444,7 @@ int i, k;
      //       pos[i]= pos[i] + longitud -k*longitud;
       // pos[i]=  longitud -k;
       //pos[i] - k*longitud
-       pos[i]= longitud +pos[i] - k*longitud;
+       pos[i]= longitud +pos[i] + k*longitud;
 
             }
         else pos[i]=pos[i];
@@ -400,4 +453,3 @@ int i, k;
  }
 
 //se podria hacer una funcion para ver la distancia al eje x y al eje y y compararla con la distancia entre particulas y quedarnos con la menor.
-
