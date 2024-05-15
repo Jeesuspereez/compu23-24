@@ -82,7 +82,7 @@ int main(void)
 //programa
 for(int k=0;k<=1000; k++)
 {
-//comenzamos un paso de montecarlo (N^2 iteraciones,en este caso N=filas*columnas)
+    //comenzamos un paso de montecarlo (N^2 iteraciones,en este caso N=filas*columnas)
     for(i=0; i<N ; i++)
     {
     //1.Generar posicion aleatoria en la red
@@ -120,8 +120,8 @@ for(int k=0;k<=1000; k++)
          
     }
 
-//mostramos la matriz
-    for (i = 0; i < filas; i++) {
+        //mostramos la matriz
+      for (i = 0; i < filas; i++) {
         for (j = 0; j < columnas; j++) {
              if (j < columnas-1) {
             fprintf(archivo, "%d, ", s[i][j]);
@@ -133,7 +133,7 @@ for(int k=0;k<=1000; k++)
 
 fprintf(archivo, "\n");
 
-}
+    }
 
     fclose(archivo);
 
@@ -144,7 +144,7 @@ fprintf(archivo, "\n");
     free(s);
 
     return 0;
-}
+    }
 
 
 //Implementacion de las funciones
