@@ -33,12 +33,14 @@ int main(void)
     energia=0;
 
     // número de filas y columnas de la red OJO AL EMPEZAR EL PUNTERO EN CERO TENEMOS QUE HACER DIM-1
-    filas=64;
-    columnas=64;
+    filas=90;
+    columnas=90;
     N=filas*filas;
 
+    //probar a subir a 80x80 bajar fps y temp critica
+
     //Valor de la temperatura OJO T[0,5]
-    T=1;
+    T=2.27;
 
     // Asignar memoria para las filas
     s = (int **)malloc((filas+1) * sizeof(int *));
@@ -80,7 +82,7 @@ int main(void)
 
 
 //programa
-for(int k=0;k<=1000; k++)
+for(int k=0;k<=10000; k++)
 {
     //comenzamos un paso de montecarlo (N^2 iteraciones,en este caso N=filas*columnas)
     for(i=0; i<N ; i++)
