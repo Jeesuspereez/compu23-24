@@ -15,9 +15,6 @@ int main(void)
     double lambda, h, x_0, sigma, *V, k_0, s, norm;
 
 
-    //definimos N
-    N = 1000;
-    p=10000;
 
     //abrimos arhcivo de salida
     FILE *archivo;
@@ -35,6 +32,11 @@ int main(void)
         printf("Error al abrir el archivo.\n");
         return 1;
     }
+
+    
+    //definimos N
+    N = 1000;
+    p=10000;
 
     // Asignar memoria para los vectores
     alpha = (double complex *)malloc((N + 1)*sizeof(double complex));

@@ -40,7 +40,7 @@ int main(void)
     //probar a subir a 80x80 bajar fps y temp critica
 
     //Valor de la temperatura OJO T[0,5]
-    T=2.27;
+    T=4.;
 
     // Asignar memoria para las filas
     s = (int **)malloc((filas+1) * sizeof(int *));
@@ -97,7 +97,7 @@ for(int k=0;k<=10000; k++)
     //2.Evaluar p
     //evaluar energia
    // energia= 2*s[n][m]*(s[n + 1][m] + s[n - 1][m] + s[n][m +1] + s[n][ m -1 ]);
-   //formula nico
+   //formula 
     energia= 2*s[n][m]*(s[(n + 1)%filas][m] + s[(n - 1+filas)%filas][m] + s[n][(m +1)%columnas] + s[n][ (m -1+columnas)%columnas]);
 
         //evaluar exponencial
