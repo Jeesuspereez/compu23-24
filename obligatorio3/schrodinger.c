@@ -44,11 +44,14 @@ int main(void)
     beta =(double complex *)malloc((N + 1)*sizeof(double complex));
 
 
+    //parametros a cambiar: lambda, nciclos y N
+
     // Definicion de constantes
+    //nciclos=50.;
     nciclos=50.;
     h=0.01;
     norm=0.;
-    lambda = 0.5;
+   lambda = 0.5;
     k_0 = (2.*PI*nciclos)/(N+0.);
     s = 1./(4.*k_0 *k_0);
     //parametros distribucion
