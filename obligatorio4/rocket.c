@@ -19,9 +19,16 @@ long double f4(long double r, long double phi, long double w, long double nu, lo
 
 int main(void)
 {
-    int i, filas;
-    filas=4;
-    long double **k,phi, r, h, Pr, Pphi, mu, delta,t, Vesc,v, velx,vely, maximo;
+    int i, filas,j;
+    filas=5;
+    long double **k,phi, r, h, Pr, Pphi, mu, delta,t, Vesc,v, velx,vely, maximo, rdot;
+
+    j=0;
+    t=0.;
+
+     FILE *archivo;
+    char rock[] = "cohete.txt";
+    archivo = fopen(rock, "w");
 
     //definimos la matriz de k, la fila indica k1, k2 k3 k4 mientras que la columna indica la funcion
     k = (long double **)malloc((filas+1) * sizeof(long double *));
@@ -43,21 +50,26 @@ int main(void)
     h=0.01;
 	delta = (G * masaTIE) / pow(distanciaTIELUN, 3.0);
 	mu = masaLUN / masaTIE;
-    maximo=10000;
+    maximo=10000000;
 
 	//Condiciones del cohete y reescalamiento
-	r = radioTIERRA / distanciaTIELUN;
-	v = sqrt((2.0*G*masaTIE)/radioTIERRA) / distanciaTIELUN; //reescalada
+	r = 1.0*radioTIERRA / distanciaTIELUN;
+	v=11200/distanciaTIELUN;
 	phi = 0.49577543479; 
-	velx = v * cos(PI / 4.0); // PI/4.0 es la posición desde la superficie a la Luna
-	vely = v * sin(PI / 4.0); // PI/4.0 es la posición desde la superficie a la Luna
-	Pr = v * cos(PI / 4.0 - phi);
-	Pphi = r * v * sin(PI / 4.0 - phi);
-	r_ = sqrt(1 + r * r - 2.0 * r * cos(phi)); //fijarse
+	velx = v * cosl(PI / 4.0); // PI/4.0 es la posición desde la superficie a la Luna
+	vely = v * sinl(PI / 4.0); // PI/4.0 es la posición desde la superficie a la Luna
+	Pr = v * cosl(phi);
+	Pphi = r * v * sinl(phi);
+	rdot = sqrt(1 + r * r - 2.0 * r * cosl(phi- OMEGA*0.));
 
     while (t<maximo)
     {
-       //1. Dar yn = yn(0)
+        if(j%5000==0){
+             fprintf(archivo, "%f", 1.0*r*cosl(phi));
+              fprintf(archivo, ", %f\n", 1.0*r*sinl(phi));
+               fprintf(archivo, "%f", 1.0*cosl(OMEGA*j*t*1.0));
+                fprintf(archivo, ", %f\n", 1.0*sinl(OMEGA*j*t*1.0));
+        }
 
     //2. Evaluar k(1) 
     k[1][1]=h*f1(Pr);
@@ -66,30 +78,35 @@ int main(void)
     k[1][4]=h*f4(r, phi, OMEGA, mu, delta, t); 
 
     //3. Evaluar k(2)
-    k[2][1]=h*f1(Pr+ k[1][2] / 2.);
-    k[2][2]=1;
-    k[2][3]=1;
-    k[2][4]=1;
+    k[2][1]=h*f1(Pr+ k[1][3] / 2.);
+    k[2][2]=h*f2(r + k[1][1] / 2.0,Pphi + k[1][4] / 2.0);
+    k[2][3]=h*f3(r + k[1][3] / 2.0,Pphi + k[1][4] / 2.0, phi + k[1][2] / 2.0, mu, delta, OMEGA, 1.0*j*h);
+    k[2][4]=h*f4( r + k[1][1] / 2.0, phi + k[1][2] / 2.0, OMEGA, mu,delta, t + h / 2.0);
 
     //4. Evaluar k(3)
-    k[3][1]=1;
-    k[3][2]=1;
-    k[3][3]=1;
-    k[3][4]=1;
+    k[3][1]=h*f1(Pr+ k[2][3] / 2.);
+    k[3][2]=h*f2(r + k[2][1] / 2.0,Pphi + k[2][4] / 2.0);
+    k[3][3]=h*f3(r + k[2][3] / 2.0,Pphi + k[2][4] / 2.0, phi + k[2][2] / 2.0, mu, delta, OMEGA, 1.0*j*h);
+    k[3][4]=h*f4( r + k[2][1] / 2.0, phi + k[2][2] / 2.0, OMEGA, mu,delta, 1.0*j*h);
 
     //5. Evaluar k(4)
-    k[4][1]=1;
-    k[4][2]=1;
-    k[4][3]=1;
-    k[4][4]=1;
+    k[4][1]=h*f1(Pr+ k[3][3]);
+    k[4][2]=h*f2(r + k[3][1],Pphi + k[3][4]);
+    k[4][3]=h*f3(r + k[2][1],Pphi + k[3][4] , phi + k[3][2], mu, delta, OMEGA, j*h);
+    k[4][4]=h*f4( r + k[3][1], phi + k[3][2], OMEGA, mu,delta, j*h);
 
     //6. yn(t+h)
+        Pphi= Pphi + (k[1][4]+2.0*k[2][4]+2.0*k[3][4]+k[4][4])/6.0;
+        r=r + (k[1][1]+2.0*k[2][1]+2.0*k[3][1]+k[4][1])/6.0;
+        phi= phi + (k[1][2]+2.0*k[2][2]+2.0*k[3][2]+k[4][2])/6.0;
+        Pr= Pr + (k[1][3]+2.0*k[2][3]+2.0*k[3][3]+k[4][3])/6.0;
 
     //7. t=t+h
         t=t+h;
+        j++;
     }
     
-    
+
 
 
 // Liberar la memoria
@@ -99,6 +116,7 @@ int main(void)
     free(k);
 
     return 0;
+        fclose(archivo);
 
 }
 
@@ -124,8 +142,8 @@ long double f3(long double r, long double p_phi, long double phi, long double w,
     long double P_r;
     long double aux;
 
-    aux=sqrt(1+r*r -2.*r*cos(phi - w*t));
-    P_r= (1.0*p_phi*p_phi)/(pow(r,3)) -delta*(1./(r*r) + nu/pow(aux,3)*(r -cos(phi -w*t)) );
+    aux=sqrt(1+r*r -2.*r*cos(phi - 1.0*w*t));
+    P_r= (1.0*p_phi*p_phi)/(pow(r,3)) -delta*(1./(r*r) + nu/pow(aux,3)*(r -cos(phi -1.0*w*t)) );
 
     return P_r;
 }
@@ -137,8 +155,8 @@ long double f4(long double r, long double phi, long double w, long double nu, lo
     long double P_phi;
     long double aux;
 
-    aux=sqrt(1.+r*r -2.*r*cos(phi - w*t));
-    P_phi= (-1.0*delta*nu*r*sin(phi-w*t))/pow(aux,3);
+    aux=sqrt(1.+r*r -2.*r*cos(phi - 1.0*w*t));
+    P_phi= (-1.0*delta*nu*r*sin(phi-1.0*w*t))/pow(aux,3);
 
     return P_phi;
 }
