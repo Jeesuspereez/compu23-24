@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <math.h>
 //libreria que optimiza bucles
-#include <omp.h>
+//#include <omp.h>
 
 #define c (long double)(1.496 * pow(10, 11)) // Unidad astronómica en metros
 #define G (long double)(6.674 * pow(10, -11)) // Constante de gravitación universal en m^3 kg^-1 s^-2
@@ -117,7 +117,7 @@ int main(void)
     step=t/h;
 
  //numero de planetas filas=N+1 donde N es nº planetas ojo cuenta con el sol
-    N=2; //numero de planetas que se le suma a la simulacion
+    N=20; //numero de planetas que se le suma a la simulacion
     filas=10 + N;
     //con pluto filas=10;
    
@@ -172,6 +172,7 @@ r_x[6] = DSATURN;
 r_x[7] = DURANUS;
 r_x[8] = DNEPTUNE;
 r_x[9] = DPLUTO;
+
 //le ponemos la posicion al resto de N planetas
     for(i=10;i<filas;i++){
     r_x[i]=r_x[i-1] + incd;
@@ -191,6 +192,7 @@ m[6] = masaSATURN;
 m[7] = masaURANUS;
 m[8] = masaNEPTUNE;
 m[9] = masaPLUTO;
+
 //le ponemos masa al resto de N planetas
   for(i=10;i<filas;i++){
     m[i]= masaJUP; //en este caso, la masa de Jupiter
