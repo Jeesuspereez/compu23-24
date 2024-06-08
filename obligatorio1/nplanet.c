@@ -117,7 +117,7 @@ int main(void)
     step=t/h;
 
  //numero de planetas filas=N+1 donde N es nº planetas ojo cuenta con el sol
-    N=90; //numero de planetas que se le suma a la simulacion
+    N=100; //numero de planetas que se le suma a la simulacion
     filas=10 + N;
     //con pluto filas=10;
    
