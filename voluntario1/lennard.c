@@ -22,6 +22,7 @@ void generar_posiciones(long double *posx, long double *posy, int dimension, int
 void generar_velocidades(long double *velx, long double *vely, int dimension);
 void imprimirCoordenadas(long double *x, long double *y, int n);
 void contorno(long double *pos, int tampart, int longitud);
+long double temperatura(long double *vx, long double *vy, int  final, int inicial, int dim);
 
 int main(void)
 {
@@ -51,7 +52,7 @@ int main(void)
     long double *m, *r_x, *r_y, *v_x, *w_x, *w_y, *v_y, *a_x, *a_y, t, h;
 
     t = 0;
-    h = 0.0002; // paso
+    h = 0.002; // paso
     sigma = 1;
     epsilon = 1;
 
@@ -114,33 +115,34 @@ int main(void)
     aceleracion(a_y, r_y, r_x, L, filas);
 
     /* ALGORITMO DE VERLET */
-    for (t = 0; t < 100; t++)
+    for (int paso = 0; paso < 100000; paso++)
     {
 
         // Calculando nuevas posiciones
-        calculopos(r_x, v_x, a_x, t, filas);
-        calculopos(r_y, v_y, a_y, t, filas);
+        calculopos(r_x, v_x, a_x, h, filas);
+        calculopos(r_y, v_y, a_y, h, filas);
 
         //aplicamos condiciones de contorno
         contorno(r_x, N, L);
         contorno(r_y, N, L);
 
         // Calculando w
-        calculow(w_x, v_x, a_x, t, filas);
-        calculow(w_y, v_y, a_y, t, filas);
+        calculow(w_x, v_x, a_x, h, filas);
+        calculow(w_y, v_y, a_y, h, filas);
 
         // Calculando nuevas aceleraciones
         aceleracion(a_x, r_x, r_y, L, filas);
         aceleracion(a_y, r_y, r_x, L, filas);
 
         // Calculando nuevas velocidades
-        calculov(v_x, w_x, a_x, t, filas);
-        calculov(v_y, w_y, a_y, t, filas);
+        calculov(v_x, w_x, a_x, h, filas);
+        calculov(v_y, w_y, a_y, h, filas);
 
         // Corrigiendo posiciones para escribirlas en el archivo
         corriger(r_x, sigma, filas);
         corriger(r_y, sigma, filas);
 
+        if(paso%10==0){
         //imprimo posiciones nuevas
         for (k = 0; k < filas; k++)
         {
@@ -148,6 +150,7 @@ int main(void)
             fprintf(archivo, ", %.10Lf\n", r_y[k]);
         }
         fprintf(archivo, "\n");
+        }
 
         // Calculando energía y momento angular total
         long double V = potencial(m, r_x, r_y, a_x, a_y, filas);
@@ -155,11 +158,18 @@ int main(void)
         long double energiatotal = cin + V;
         long double momentoang = mangular(m, r_x, r_y, v_x, v_y, filas);
 
+        //calculamos la temperatura
+        int inicial=20;
+        int final=50;
+        long double T = temperatura(v_x,v_y, final, inicial, filas);
+        printf ("%.10Lf\n", T);
+     
         // Escribiendo en los archivos
         fprintf(archivo_, "%.10Lf\n", energiatotal);
         fprintf(archivo_cinetic, "%.10Lf\n", cin);
         fprintf(archivo_potenciale, "%.10Lf\n", V);
         fprintf(archivo__, "%.10Lf\n", momentoang);
+        
     }
 
     // Liberando memoria asignada para los vectores
@@ -224,8 +234,20 @@ void aceleracion(long double *aceleracion, long double *posx, long double *posy,
         {
             if (i != j)
             {
-                distx = posx[i] - posx[j];
-                disty = posy[i] - posy[j];
+ /*               double dx = fabs(x2 - x1);
+    double dy = fabs(y2 - y1);
+
+    // Aplicar condiciones periódicas
+    if (dx > L / 2.0) dx = L - dx;
+    if (dy > L / 2.0) dy = L - dy;
+
+    */
+                distx = fabs(posx[i] - posx[j]);
+                disty = fabs(posy[i] - posy[j]);
+                if (distx > L / 2.0) distx = L - distx;
+                else distx=distx;
+                if (disty > L / 2.0) disty = L - disty;
+                 else disty=disty;
                // distx = distx - round(distx / (2 * L)) * (2. * L);
                // disty = disty - round(disty / (2 * L)) * (2. * L);
                 distancia = sqrt(distx * distx + disty * disty);
@@ -364,4 +386,22 @@ void contorno(long double *pos, int tampart, int longitud)
         else
             pos[i] = pos[i];
     }
+}
+
+long double temperatura(long double *vx, long double *vy, int  final, int inicial, int dim)
+{
+    long double T, velocidades, taminter;
+
+    velocidades=0.;
+    taminter=1.0*(final-inicial);
+
+    for (int t = inicial; t < final; t++) {
+    for(int i=0; i<dim; i++)
+    {
+        velocidades+= vx[i]*vx[i] + vy[i]*vy[i];
+    }
+    }
+
+    return 0.5*velocidades/(dim*taminter);
+
 }
