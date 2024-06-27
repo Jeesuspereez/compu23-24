@@ -28,6 +28,13 @@ ax.set_xlabel('Posición x')
 ax.set_ylabel('Posición y')
 ax.set_title('Movimiento de las partículas')
 
+# Preguntar al usuario si desea mostrar estelas
+mostrar_estelas = input("¿Deseas mostrar estelas para las partículas (s/n)? ").lower() == 's'
+
+# Almacena las posiciones anteriores para las estelas
+if mostrar_estelas:
+    estelas = []
+
 # Función de inicialización de la animación
 def init():
     sc.set_offsets(np.array([]).reshape(0, 2))  # Inicializar con un array vacío
@@ -39,6 +46,14 @@ def update(frame):
         x = [particula[0] for particula in datos[frame]]
         y = [particula[1] for particula in datos[frame]]
         sc.set_offsets(np.column_stack((x, y)))
+        
+        if mostrar_estelas:
+            estelas.append((x, y))
+            for i in range(len(x)):
+                estela_x = [e[0][i] for e in estelas]
+                estela_y = [e[1][i] for e in estelas]
+                ax.plot(estela_x, estela_y, 'r-', alpha=0.5)  # Dibuja la estela en rojo con algo de transparencia
+    
     return sc,
 
 # Crear la animación

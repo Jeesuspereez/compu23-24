@@ -23,6 +23,7 @@ void generar_velocidades(long double *velx, long double *vely, int dimension);
 void imprimirCoordenadas(long double *x, long double *y, int n);
 void contorno(long double *pos, int tampart, int longitud);
 long double temperatura(long double *vx, long double *vy, int  final, int inicial, int dim);
+void generate_array(long double *posx, long double *posy, int n, int L) ;
 
 int main(void)
 {
@@ -30,6 +31,10 @@ int main(void)
     FILE *archivo;
     char simplanet[] = "lennard.txt";
     archivo = fopen(simplanet, "w");
+
+    FILE *velocity;
+    char veloz[] = "velocity.txt";
+    velocity = fopen(veloz, "w");
 
     FILE *archivo_cinetic;
     char cinetic[] = "cineticalen.txt";
@@ -49,15 +54,15 @@ int main(void)
 
     // Definición de variables
     int i, filas, j, k, N, L, sigma, epsilon;
-    long double *m, *r_x, *r_y, *v_x, *w_x, *w_y, *v_y, *a_x, *a_y, t, h;
+    long double *m, *r_x, *r_y, *v_x, *w_x, *w_y, *v_y, *a_x, *a_y, t, h, velocidades, T;
 
     t = 0;
     h = 0.002; // paso
-    sigma = 1;
-    epsilon = 1;
+    sigma = 1.;
+    epsilon = 1.;
 
     L = 10; // tamaño de la caja
-    N = 20; // numero de particulas
+    N = 15; // numero de particulas
     filas = N;
 
     // Asignando memoria para los vectores
@@ -86,7 +91,8 @@ int main(void)
     }
 
     //asignamos posicion random
-    generar_posiciones(r_x, r_y, N, L);
+    // generar_posiciones(r_x, r_y, N, L);
+    generate_array(r_x, r_y, N, L);
 
     // Rescalando vectores de posición
     rescr(r_x, sigma, filas);
@@ -158,12 +164,33 @@ int main(void)
         long double energiatotal = cin + V;
         long double momentoang = mangular(m, r_x, r_y, v_x, v_y, filas);
 
+    /*
         //calculamos la temperatura
         int inicial=20;
         int final=50;
-        long double T = temperatura(v_x,v_y, final, inicial, filas);
+        velocidades=0.;
+
+        if(paso>=inicial && paso<=final){
+        for(int i=0; i<filas; i++)
+        {
+        velocidades+= v_x[i]*v_x[i] + v_y[i]*v_y[i];
+        }
+        }
+
+        if(paso==final){
+         T= 0.5*velocidades/(filas*1.0*(final-inicial));
         printf ("%.10Lf\n", T);
-     
+        }
+
+        */
+
+    /*   //para el histograma de velocidades:
+        if (paso >= paso/2 && paso % 10 == 0) { // Guardar velocidades después de alcanzar el equilibrio
+            for (int i = 0; i < filas; i++) {
+                fprintf(velocity, "%.5Lf %.5Lf\n", v_x[i], v_y[i]);
+            }
+        }
+     */ 
         // Escribiendo en los archivos
         fprintf(archivo_, "%.10Lf\n", energiatotal);
         fprintf(archivo_cinetic, "%.10Lf\n", cin);
@@ -185,6 +212,7 @@ int main(void)
 
     // Cerrando archivos
     fclose(archivo);
+    fclose(velocity);
     fclose(archivo_);
     fclose(archivo__);
     fclose(archivo_cinetic);
@@ -222,7 +250,7 @@ void corriger(long double *pos, int sig, int n)
 
 void aceleracion(long double *aceleracion, long double *posx, long double *posy, int L, int n)
 {
-    long double distx, disty, distancia;
+    long double distx, disty, distancia, aux1, aux2;
     for (int i = 0; i < n; i++)
     {
         aceleracion[i] = 0;
@@ -234,6 +262,17 @@ void aceleracion(long double *aceleracion, long double *posx, long double *posy,
         {
             if (i != j)
             {
+
+                distx = fabs(posx[i] - posx[j]);
+                disty = fabs(posy[i] - posy[j]);
+                aux1= L - distx;
+                aux2= L - disty;
+
+                if(distx>aux1) distx=aux1;
+                else distx=distx;
+
+                if(disty>aux2) disty=aux2;
+                else disty=disty;
  /*               double dx = fabs(x2 - x1);
     double dy = fabs(y2 - y1);
 
@@ -242,16 +281,25 @@ void aceleracion(long double *aceleracion, long double *posx, long double *posy,
     if (dy > L / 2.0) dy = L - dy;
 
     */
+
+   /*
+                distx = (posx[i] - posx[j]) -L*round((posx[i] - posx[j])/L);
+                disty = (posy[i] - posy[j]) -L*round((posy[i] - posy[j])/L);
+
+    */
+   /* 
                 distx = fabs(posx[i] - posx[j]);
                 disty = fabs(posy[i] - posy[j]);
-                if (distx > L / 2.0) distx = L - distx;
-                else distx=distx;
+               if (distx > L / 2.0) distx = L - distx;
+                else if (distx < L/2.) distx = L + distx;
                 if (disty > L / 2.0) disty = L - disty;
-                 else disty=disty;
+                else if (distx < L/2.) disty = L + disty;
+                */
                // distx = distx - round(distx / (2 * L)) * (2. * L);
                // disty = disty - round(disty / (2 * L)) * (2. * L);
                 distancia = sqrt(distx * distx + disty * disty);
-                aceleracion[i] += ((posx[i] - posx[j]) / distancia) * 24 * (2.0 / pow(distancia, 13) - 1.0 / pow(distancia, 7));
+               //  aceleracion[i] += ((posx[i] - posx[j]) / distancia) * 24. * (2.0 / pow(distancia, 13) - 1.0 / pow(distancia, 7));
+                 aceleracion[i] +=  (48./ pow(distancia, 13)) - (24.0 / pow(distancia, 7))*(distx-disty/distancia) ;
             }
         }
     }
@@ -365,7 +413,7 @@ void imprimirCoordenadas(long double *x, long double *y, int n)
         printf("(%.2Lf, %.2Lf)\n", x[i], y[i]);
     }
 }
-
+/*
 void contorno(long double *pos, int tampart, int longitud)
 {
     int i, k;
@@ -375,33 +423,54 @@ void contorno(long double *pos, int tampart, int longitud)
         k = 0;
         if (pos[i] > longitud)
         {
-            k = floor(pos[i] / longitud); //la funcion floor devuelve el resto real de la fraccion por ej pos=2.5L --> floor(pos/long)=.5
-            pos[i] = pos[i] - k * longitud;
+            k = floor(1.0*pos[i] / longitud); //la funcion floor devuelve el resto real de la fraccion por ej pos=2.5L --> floor(pos/long)=3
+            if(k==0) k=1;
+            pos[i] = pos[i] - k * longitud;   //pos=2.3L --> floor(pos/L)=2
         }
-        else if (pos[i] < 0)
+        if (pos[i] < 0.)
         {
-            k = floor(-pos[i] / longitud);
+            k = floor(-1.0*pos[i] / longitud);
+            if(k==0) k=1;
             pos[i] = longitud + pos[i] + k * longitud;
         }
-        else
-            pos[i] = pos[i];
+        else pos[i]=pos[i];
+    }
+}
+*/
+
+void contorno(long double *pos, int tampart, int longitud) 
+{
+    int i;
+    long double k;
+
+    for (i = 0; i < tampart; i++) {
+     //  k=fmod(fabs(pos[i]), longitud) +0.0;
+        if (pos[i] > longitud) 
+        {  // if(k==0) pos[i] = (long double);
+            pos[i] = (long double)  0.0 + fmod(pos[i], 1.0*longitud);
+
+        } else if (pos[i] < 0.) {
+            pos[i] = (long double) longitud + 0.0 - fmod(-pos[i], 1.0*longitud);
+        }
+        else pos[i]=pos[i];
     }
 }
 
-long double temperatura(long double *vx, long double *vy, int  final, int inicial, int dim)
+
+void generate_array(long double *posx, long double *posy, int n, int L) 
 {
-    long double T, velocidades, taminter;
+ //   srand(time(NULL));  // Inicializa el generador de números aleatorios
 
-    velocidades=0.;
-    taminter=1.0*(final-inicial);
+    for (int i = 0; i < n; i++) {
+        int value1 = (i % (L / 2)) * 2 + 1;
+        int value2 = (i % 4) * 2 + 1;
+        
+        // Genera dos números aleatorios entre 0 y 1
+        float rand1 = (float)rand() / RAND_MAX;
+        float rand2 = (float)rand() / RAND_MAX;
 
-    for (int t = inicial; t < final; t++) {
-    for(int i=0; i<dim; i++)
-    {
-        velocidades+= vx[i]*vx[i] + vy[i]*vy[i];
+        // Asigna los valores calculados más los aleatorios a los punteros posx y posy
+        posx[i] = (long double) 1.0*(value1 + rand1);
+        posy[i] = (long double) 1.0*(value2 + rand2);
     }
-    }
-
-    return 0.5*velocidades/(dim*taminter);
-
 }
