@@ -13,13 +13,16 @@ double aleatorio();
 int main(void)
 {
     //declaracion de variables
-    int i, N, j, n, nciclos, p, m, mT;
+    int i, N, j, n, nciclos, p, m, mT, chivato, chivato2, y;
     double complex *fonda, *beta, *alpha, *A_0, *chi;
-    double lambda, h, x_0, sigma, *V, k_0, s, norm, numaleatorio, evaluado, posiblet, anteriort;
+    double lambda, h, x_0, sigma, *V, k_0, s, norm, numaleatorio, evaluado, posiblet, anteriort, aux, *tiempillo, K, apartadotres;
 
      //Inicializo el valor de la serie de números aleatorios
     srand(time(NULL));
 
+    //chivato
+    chivato=0;
+    chivato2=0;
     //abrimos arhcivo de salida
     FILE *archivo;
     archivo = fopen("sch.dat", "w");
@@ -27,7 +30,7 @@ int main(void)
     if (archivo == NULL) {
         printf("Error al abrir el archivo.\n");
         return 1;
-    }\
+    }
     //abrimos arhcivo norma
     FILE *normadata;
     normadata = fopen("norma.dat", "w");
@@ -37,17 +40,34 @@ int main(void)
         return 1;
     }
 
+    //abrimos arhcivo de salida
+    FILE *prueba;
+    prueba = fopen("tiempillo.txt", "w");
+
+    if (prueba == NULL) {
+        printf("Error al abrir el archivo.\n");
+        return 1;
+    }
+
     
     //definimos N
-    N = 1000/2;
-    p=1000;
+    N = 2000;
+  //  p=1000;
+  p=10000;
 
     // Asignar memoria para los vectores
     alpha = (double complex *)malloc((N + 1)*sizeof(double complex));
     V = (double *)malloc((N + 1)*sizeof(double));
+    tiempillo = (double *)malloc((p + 10)*sizeof(double));
     fonda = (double complex *)malloc((N + 1)*sizeof(double complex));
     chi = (double complex *)malloc((N + 1)*sizeof(double complex));
     beta =(double complex *)malloc((N + 1)*sizeof(double complex));
+
+    //inicializamos tiempillo
+    for( y=0; y<p+1 ; y++)
+    {
+        tiempillo[y]=0.;
+    }
 
 
     //parametros a cambiar: lambda, nciclos y N
@@ -57,7 +77,7 @@ int main(void)
     nciclos=50.;
     h=0.01;
     norm=0.;
-    lambda = 0.5;
+    lambda = 0.05;
     k_0 = (2.*PI*nciclos)/(N+0.);
     s = 1./(4.*k_0 *k_0);
     //parametros distribucion
@@ -109,14 +129,20 @@ int main(void)
     }
 
     //hacemos el experimento m veces
-m=100;
-for(int expe=0; expe<=m; expe++)
+m=1000;
+apartadotres=0.;
+for(int expe=0; expe<m; expe++)
 {
-    //inicalizamos los valores que van a comparar
-    anteriort=0.;
-    posiblet=0.1;
+
+        for(y=0; y<p+1 ; y++)
+    {
+        tiempillo[y]=0.;
+    }
+    chivato=0;
 
         for(n=0; n<p+1; n++){ 
+       // tiempillo[n+1]=0.;
+    //    tiempillo[0]=0.; // lo acabo de quitar pero creo q no hace falta
 
         // 2. Calcular beta utilizando la recurrencia (22).
             for(j=N-2;j>0; j--){
@@ -137,44 +163,77 @@ for(int expe=0; expe<=m; expe++)
             fprintf(normadata, "%f", norm);
             fprintf(normadata, "\n");
 
-        // 5. n = n + 1, ir a al paso 2
-         //imprimimos la funcion de onda
-            for(j=0;j<=N;j++){
+            // 5. n = n + 1, ir a al paso 2
+            //imprimimos la funcion de onda
+             for(j=0;j<=N;j++){
              //   fprintf(archivo, "%i, %f, %f, %f, %f\n",j, cabs(fonda[j]), creal(fonda[j]),cimag(fonda[j]), V[j]); //todos paramretros
                 fprintf(archivo, "%i, %f, %f\n",j, cabs(fonda[j]), V[j]); //solo vabs
             }
              fprintf(archivo, "\n");
 
-             // Calculamos la probabilidad a la derecha (primer máximo local t=742) (cuando el anterior deje de ser menor que el nuevo se llega al máximo local)
-            posiblet = detectorD(fonda, N);
+             // Calculamos la probabilidad a la derecha
+            tiempillo[n+1]=detectorD(fonda,N);
 
-            if(posiblet < anteriort)
+            if(tiempillo[n+1]>=tiempillo[n])
             {
-                n = p+1;
+                aux=tiempillo[n+1];
+                chivato++;
             }
-            else
-            {
-                anteriort = posiblet;
+
+            else n=p+1;
+
+            tiempillo[n]=aux;
+            chivato2++;
+
+        /*   if(expe==10){
+                  for(j=0;j<=p+9;j++)
+                  {
+                fprintf(prueba, "%f,", tiempillo[j]);
             }
+
+            }
+            */ 
 
         }
 
        // 6.1 Simulamos el proceso de medicion generando un numero aleatorio p ∈ [0, 1]. Si p > PD(nD) habremos detectado 
        //la particula y actualizamos el valor mT = mT + 1. Si p < PD(nD) no se habria detectado la particula y
         //actualizamos mT = mT + 0.
-        numaleatorio=aleatorio();
+      numaleatorio=aleatorio();
 
-        if (numaleatorio>posiblet) {
+    /*   if (numaleatorio>tiempillo[chivato]) {
             mT++;
         }
-        else mT=mT+0;
+
+        */ 
+       apartadotres+=tiempillo[chivato];
+
+        fprintf(prueba, "%i, %f", chivato, tiempillo[chivato]);
+        fprintf(prueba, "\n");
+
+       if (numaleatorio<tiempillo[chivato]) {
+            mT++;
+        }
+
+ //       printf("%.20f,", tiempillo[chivato]); 
 
 }
-printf("%f", mT/m); 
+
+K=(0.0+mT)/m;
+apartadotres=apartadotres/m;
+printf("%f,", K); 
+// printf("%i,", chivato);
+printf("%i,", chivato2);
+printf("%i,", mT);
+printf("%i,", m);
+printf("\n"); 
+printf("apartado tres (promedio de Pd(nd)): ");
+printf("%f", apartadotres); 
 
     //cerramos fichero de salida
         fclose(archivo);
         fclose(normadata);
+        fclose(prueba);
 
     // Liberar la memoria dinamica
     free(V);
@@ -182,6 +241,7 @@ printf("%f", mT/m);
     free(chi);
     free(fonda);
     free(beta);
+    free(tiempillo);
 
     return 0;
 }
@@ -191,9 +251,9 @@ double detectorD(double complex *psi, int N)
     int j;
     double PD=0.;
 
-    for (j=4.*N/5; j<=N; j++)
+    for (j=4*N/5; j<=N; j++)
     {
-        PD+=pow(cabs(psi[j]),2);
+        PD+= cabs(psi[j])*cabs(psi[j]);
     }
 
     return  PD;
