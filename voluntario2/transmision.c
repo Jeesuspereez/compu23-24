@@ -4,6 +4,7 @@
 #include <time.h>
 #include <math.h>
 #include <omp.h>
+#include <stdbool.h>
 
 #define PI (3.1415926535897932384)
 
@@ -16,6 +17,7 @@ int main(void)
     int i, N, j, n, nciclos, p, m, mT, chivato, chivato2, y;
     double complex *fonda, *beta, *alpha, *A_0, *chi;
     double lambda, h, x_0, sigma, *V, k_0, s, norm, numaleatorio, evaluado, posiblet, anteriort, aux, *tiempillo, K, apartadotres;
+    bool manolo;
 
      //Inicializo el valor de la serie de números aleatorios
     srand(time(NULL));
@@ -51,9 +53,9 @@ int main(void)
 
     
     //definimos N
-    N = 2000;
+    N = 1000;
   //  p=1000;
-  p=10000;
+  p=1000;
 
     // Asignar memoria para los vectores
     alpha = (double complex *)malloc((N + 1)*sizeof(double complex));
@@ -77,7 +79,7 @@ int main(void)
     nciclos=50.;
     h=0.01;
     norm=0.;
-    lambda = 0.05;
+    lambda = 5.;
     k_0 = (2.*PI*nciclos)/(N+0.);
     s = 1./(4.*k_0 *k_0);
     //parametros distribucion
@@ -139,10 +141,10 @@ for(int expe=0; expe<m; expe++)
         tiempillo[y]=0.;
     }
     chivato=0;
+    manolo = false;
 
-        for(n=0; n<p+1; n++){ 
-       // tiempillo[n+1]=0.;
-    //    tiempillo[0]=0.; // lo acabo de quitar pero creo q no hace falta
+        for(n=0; n<p+1; n++){
+            manolo = false; 
 
         // 2. Calcular beta utilizando la recurrencia (22).
             for(j=N-2;j>0; j--){
@@ -165,55 +167,46 @@ for(int expe=0; expe<m; expe++)
 
             // 5. n = n + 1, ir a al paso 2
             //imprimimos la funcion de onda
-             for(j=0;j<=N;j++){
+     /*        for(j=0;j<=N;j++){
              //   fprintf(archivo, "%i, %f, %f, %f, %f\n",j, cabs(fonda[j]), creal(fonda[j]),cimag(fonda[j]), V[j]); //todos paramretros
                 fprintf(archivo, "%i, %f, %f\n",j, cabs(fonda[j]), V[j]); //solo vabs
             }
              fprintf(archivo, "\n");
+
+             */
 
              // Calculamos la probabilidad a la derecha
             tiempillo[n+1]=detectorD(fonda,N);
 
             if(tiempillo[n+1]>=tiempillo[n])
             {
-                aux=tiempillo[n+1];
+             //   aux=tiempillo[n+1];
                 chivato++;
+             //   tiempillo[n]=aux;
+                chivato2++;
             }
 
-            else n=p+1;
+            else manolo=true;
 
-            tiempillo[n]=aux;
-            chivato2++;
+            if(manolo==true){
+             numaleatorio=aleatorio();
+                if (numaleatorio<tiempillo[chivato]) {
+                    mT++;
+                    n=p+1;
+                    apartadotres+=tiempillo[chivato];
+                }
+    //            else expe++;
 
-        /*   if(expe==10){
-                  for(j=0;j<=p+9;j++)
-                  {
-                fprintf(prueba, "%f,", tiempillo[j]);
             }
 
-            }
-            */ 
+           
 
         }
-
-       // 6.1 Simulamos el proceso de medicion generando un numero aleatorio p ∈ [0, 1]. Si p > PD(nD) habremos detectado 
-       //la particula y actualizamos el valor mT = mT + 1. Si p < PD(nD) no se habria detectado la particula y
-        //actualizamos mT = mT + 0.
-      numaleatorio=aleatorio();
-
-    /*   if (numaleatorio>tiempillo[chivato]) {
-            mT++;
-        }
-
-        */ 
-       apartadotres+=tiempillo[chivato];
 
         fprintf(prueba, "%i, %f", chivato, tiempillo[chivato]);
         fprintf(prueba, "\n");
 
-       if (numaleatorio<tiempillo[chivato]) {
-            mT++;
-        }
+       
 
  //       printf("%.20f,", tiempillo[chivato]); 
 
@@ -221,8 +214,9 @@ for(int expe=0; expe<m; expe++)
 
 K=(0.0+mT)/m;
 apartadotres=apartadotres/m;
+printf("el coeficiente calculado es: ");
 printf("%f,", K); 
-// printf("%i,", chivato);
+printf("\n"); 
 printf("%i,", chivato2);
 printf("%i,", mT);
 printf("%i,", m);
