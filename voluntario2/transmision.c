@@ -53,7 +53,7 @@ int main(void)
 
     
     //definimos N
-    N = 1000;
+    N = 2000;
   //  p=1000;
   p=1000;
 
@@ -79,7 +79,7 @@ int main(void)
     nciclos=50.;
     h=0.01;
     norm=0.;
-    lambda = 5.;
+    lambda = 1.1;
     k_0 = (2.*PI*nciclos)/(N+0.);
     s = 1./(4.*k_0 *k_0);
     //parametros distribucion
@@ -214,7 +214,9 @@ for(int expe=0; expe<m; expe++)
 
 K=(0.0+mT)/m;
 apartadotres=apartadotres/m;
-printf("el coeficiente calculado es: ");
+printf("para lambda ");
+printf("%f,", lambda); 
+printf(" el coeficiente calculado es: ");
 printf("%f,", K); 
 printf("\n"); 
 printf("%i,", chivato2);

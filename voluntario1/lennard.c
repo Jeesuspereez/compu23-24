@@ -13,7 +13,7 @@ void calculopos(double *pos, double *vel, double *acel, double h, int n);
 void calculov(double *velocidad, double *aux, double *acel, double h, int n);
 void calculow(double *aux, double *vel, double *acel, double h, int n);
 double cinetica(double *masa, double *velx, double *vely, int n);
-double potencial(double *masa, double *posx, double *posy, double *acelx, double *acely, int n);
+double potencial(double *masa, double *posx, double *posy, int n, int L);
 void generar_posiciones(double *posx, double *posy, int dimension, int longitud);
 void generar_velocidades(double *velx, double *vely, int dimension);
 void imprimirCoordenadas(double *x, double *y, int n);
@@ -124,7 +124,7 @@ int main(void)
         calculov(v_x, w_x, a_x, h, filas);
         calculov(v_y, w_y, a_y, h, filas);
 
-        if(paso%1000==0){
+        if(paso%100==0){
         //imprimo posiciones nuevas
         for (k = 0; k < filas; k++)
         {
@@ -135,7 +135,7 @@ int main(void)
         }
 
         // Calculando energía y momento angular total
-        double V = potencial(m, r_x, r_y, a_x, a_y, filas);
+        double V = potencial(m, r_x, r_y, N, L);
         double cin = cinetica(m, v_x, v_y, filas);
         double energiatotal = cin + V;
 
@@ -225,33 +225,64 @@ void aceleracion(double *aceleracion, double *posx,double *posy, int L, int n)
                 else disty=disty;
 
                 */
- /*               double dx = fabs(x2 - x1);
-    double dy = fabs(y2 - y1);
+      distx = fabs(posx[i] - posx[j]);
+     disty = fabs(posy[i] - posy[j]);
 
     // Aplicar condiciones periódicas
-    if (dx > L / 2.0) dx = L - dx;
-    if (dy > L / 2.0) dy = L - dy;
+    if (distx > L / 2.0) distx = L - distx;
+    if (disty > L / 2.0) disty = L - disty;
 
-    */
-
-   /*
+    
+  /*
+   
                 distx = (posx[i] - posx[j]) -L*round((posx[i] - posx[j])/L);
                 disty = (posy[i] - posy[j]) -L*round((posy[i] - posy[j])/L);
 
-    */
-    
-                distx = fabs(posx[i] - posx[j]);
+     */
+   
+      /*          distx = fabs(posx[i] - posx[j]);
                 disty = fabs(posy[i] - posy[j]);
-               if (distx > L / 2.0) distx = L - distx;
-                else if (distx < L/2.) distx = L + distx;
-                if (disty > L / 2.0) disty = L - disty;
+               
+                if (distx > L / 2.0) distx = L - distx;
+               else if (distx < L/2.) distx = L + distx;
+               if (disty > L / 2.0) disty = L - disty;
                 else if (distx < L/2.) disty = L + disty;
-                
+
+        */
+
+/*
+                distx = (posx[i] - posx[j]);
+                disty = (posy[i] - posy[j]);
+
+             if(distx > L/2.)   distx = distx - L;
+                else if(distx < -L/2.) distx = distx + L;
+            if(disty > L/2.) disty = disty - L;
+             else if(disty < -L/2.) disty = disty + L;
+
+             */
+/*
+            distx =  (posx[i] - posx[j]);
+            disty = (posy[i] - posy[j]);
+
+            if (fabs(distx) > L/2.){
+                distx = -(L - fabs(distx))*(distx/fabs(distx));
+            }
+
+            if (fabs(disty) > L/2.) {
+                disty = -(L-fabs(disty))*(disty/fabs(disty));
+            }
+
+            */
+            
                // distx = distx - round(distx / (2 * L)) * (2. * L);
                // disty = disty - round(disty / (2 * L)) * (2. * L);
                 distancia = sqrt(distx * distx + disty * disty);
-               //  aceleracion[i] += ((posx[i] - posx[j]) / distancia) * 24. * (2.0 / pow(distancia, 13) - 1.0 / pow(distancia, 7));
+
+                if(distancia==0.) distancia=0.001;
+
+                if(distancia<3.){
                 aceleracion[i] +=  ((posx[i] - posx[j])/distancia)*(48./ pow(distancia, 13)) - (24.0 / pow(distancia, 7)) ;
+                }
             }
         }
     }
@@ -306,24 +337,30 @@ double cinetica(double *masa, double *velx, double *vely, int n)
 }
 
 // Función que calcula la energía potencial
-double potencial(double *masa, double *posx, double *posy, double *acelx, double *acely, int n)
+double potencial(double *masa, double *posx, double *posy, int n, int L)
 {
+    int i,j;
     double epotencial = 0.0;
-    double dx, dy, r, rc, sc;
-    rc = pow(2, 1. / 6.);
-    sc = 1;
+    double distx, disty, distancia;
 
-    for (int i = 0; i < n - 1; i++)
+    for (int i = 0; i < n; i++)
     {
-        for (int j = i + 1; j < n; j++)
+        for (int j = 0; j < n; j++)
         {
-            dx = (posx[j] - posx[i]);
-            dy = (posy[j] - posy[i]);
-            r = sqrt(dx * dx + dy * dy);
-
-            if (r <= rc)
+            if (i != j)
             {
-                epotencial += 4 * (pow(r, -12) - pow(r, -6)) + 1;
+
+                distx = fabs(posx[i] - posx[j]);
+                disty = fabs(posy[i] - posy[j]);
+               
+                if (distx > L / 2.0) distx = L - distx;
+                if (disty > L / 2.0) disty = L - disty;
+
+                distancia = sqrt(distx * distx + disty * disty);
+
+                 if(distancia==0.) distancia=0.001;
+
+                epotencial +=  4 * (pow((distancia), -12) - pow((distancia), -6));
             }
         }
     }
@@ -373,11 +410,13 @@ void contorno(double *pos, int tampart, int longitud)
 
     for (i = 0; i < tampart; i++) {
      //  k=fmod(fabs(pos[i]), longitud) +0.0;
-        if (pos[i] > longitud) 
+        if (pos[i] >= longitud) 
         {  // if(k==0) pos[i] = (long double);
             pos[i] =  fmod(pos[i], longitud);
 
-        } else if (pos[i] < 0.) {
+        }
+        if (pos[i] <= 0.) {
+
             pos[i] =  longitud - fmod(fabs(pos[i]), longitud);
         }
         else pos[i]=pos[i];

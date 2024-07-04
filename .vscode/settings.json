@@ -2,6 +2,7 @@
     "files.associations": {
         "cmath": "c",
         "complex": "c",
-        "ostream": "c"
+        "ostream": "c",
+        "vector": "c"
     }
 }
