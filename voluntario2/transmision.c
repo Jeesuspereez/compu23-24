@@ -19,6 +19,7 @@ int main(void)
     double lambda, h, x_0, sigma, *V, k_0, s, norm, numaleatorio, evaluado, posiblet, anteriort, aux, *tiempillo, K, apartadotres;
     bool manolo;
 
+
      //Inicializo el valor de la serie de números aleatorios
     srand(time(NULL));
 
@@ -53,9 +54,9 @@ int main(void)
 
     
     //definimos N
-    N = 2000;
+    N = 1000;
   //  p=1000;
-  p=1000;
+  p=10000;
 
     // Asignar memoria para los vectores
     alpha = (double complex *)malloc((N + 1)*sizeof(double complex));
@@ -79,7 +80,7 @@ int main(void)
     nciclos=50.;
     h=0.01;
     norm=0.;
-    lambda = 1.1;
+    lambda = 0.1;
     k_0 = (2.*PI*nciclos)/(N+0.);
     s = 1./(4.*k_0 *k_0);
     //parametros distribucion
@@ -186,22 +187,26 @@ for(int expe=0; expe<m; expe++)
                 chivato2++;
             }
 
-            else manolo=true;
+            else {
+            manolo=true;
+
+            }
 
             if(manolo==true){
+            apartadotres+=tiempillo[chivato];
              numaleatorio=aleatorio();
                 if (numaleatorio<tiempillo[chivato]) {
                     mT++;
                     n=p+1;
-                    apartadotres+=tiempillo[chivato];
+                   
                 }
-    //            else expe++;
+
+      //          else expe++;
 
             }
 
-           
-
         }
+
 
         fprintf(prueba, "%i, %f", chivato, tiempillo[chivato]);
         fprintf(prueba, "\n");

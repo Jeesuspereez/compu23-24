@@ -8,7 +8,7 @@
 #define PI (3.1415926535897932384)
 
 // Declaración de funciones
-void aceleracion(double *aceleracion, double *posx, double *posy, int L, int n);
+void aceleracion(double *aceleracionx, double *aceleraciony, double *posx, double *posy, int L, int n);
 void calculopos(double *pos, double *vel, double *acel, double h, int n);
 void calculov(double *velocidad, double *aux, double *acel, double h, int n);
 void calculow(double *aux, double *vel, double *acel, double h, int n);
@@ -17,7 +17,7 @@ double potencial(double *masa, double *posx, double *posy, int n, int L);
 void generar_posiciones(double *posx, double *posy, int dimension, int longitud);
 void generar_velocidades(double *velx, double *vely, int dimension);
 void imprimirCoordenadas(double *x, double *y, int n);
-void contorno(double *pos, int tampart, int longitud);
+void contorno(double pos[] , double velocidad[], double *momento, int tampart, int longitud);
 double temperatura(double *vx, double *vy, int final, int inicial, int dim);
 void generate_array(double *posx, double *posy, int n, int L);
 
@@ -50,7 +50,7 @@ int main(void)
 
     // Definición de variables
     int i, filas, j, k, N, L, sigma, epsilon;
-    double *m, *r_x, *r_y, *v_x, *w_x, *w_y, *v_y, *a_x, *a_y, t, h, velocidades, T;
+    double *m, *r_x, *r_y, *v_x, *w_x, *w_y, *v_y, *a_x, *a_y, *momento, t, h, velocidades, T;
 
     t = 0;
     h = 0.002; // paso
@@ -71,6 +71,7 @@ int main(void)
     w_y = (double *)malloc((filas+1) * sizeof(double));
     a_x = (double *)malloc((filas+1) * sizeof(double));
     a_y = (double *)malloc((filas+1) * sizeof(double));
+    momento = (double *)malloc((filas+1) * sizeof(double));
 
     // Inicializando aceleraciones a cero
     for (i = 0; i < filas; i++)
@@ -97,8 +98,7 @@ int main(void)
     imprimirCoordenadas(r_x, r_y, filas);
 
     // Calculando aceleraciones para la primera iteración
-    aceleracion(a_x, r_x, r_y, L, filas);
-    aceleracion(a_y, r_y, r_x, L, filas);
+    aceleracion(a_x, a_y, r_x, r_y, L, filas);
 
     /* ALGORITMO DE VERLET */
     for (int paso = 0; paso < 100000; paso++)
@@ -109,16 +109,15 @@ int main(void)
         calculopos(r_y, v_y, a_y, h, filas);
 
         //aplicamos condiciones de contorno
-        contorno(r_x, N, L);
-        contorno(r_y, N, L);
+        contorno(r_x, v_x, momento, N, L);
+        contorno(r_y, v_y, momento, N, L);
 
         // Calculando w
         calculow(w_x, v_x, a_x, h, filas);
         calculow(w_y, v_y, a_y, h, filas);
 
         // Calculando nuevas aceleraciones
-        aceleracion(a_x, r_x, r_y, L, filas);
-        aceleracion(a_y, r_y, r_x, L, filas);
+        aceleracion(a_x, a_y, r_x, r_y, L, filas);
 
         // Calculando nuevas velocidades
         calculov(v_x, w_x, a_x, h, filas);
@@ -185,6 +184,7 @@ int main(void)
     free(w_y);
     free(a_x);
     free(a_y);
+    free(momento);
 
     // Cerrando archivos
     fclose(archivo);
@@ -198,12 +198,13 @@ int main(void)
 }
 
 // Función que calcula las aceleraciones
-void aceleracion(double *aceleracion, double *posx,double *posy, int L, int n)
+void aceleracion(double *aceleracionx, double *aceleraciony, double *posx, double *posy, int L, int n)
 {
-    long double distx, disty, distancia, aux1, aux2;
+    double distx, disty, distancia, aux1, aux2, rdif[2];
     for (int i = 0; i < n; i++)
     {
-        aceleracion[i] = 0;
+        aceleracionx[i] = 0;
+        aceleraciony[i] = 0;
     }
 
     for (int i = 0; i < n; i++)
@@ -212,76 +213,55 @@ void aceleracion(double *aceleracion, double *posx,double *posy, int L, int n)
         {
             if (i != j)
             {
-/*
-                distx = fabs(posx[i] - posx[j]);
-                disty = fabs(posy[i] - posy[j]);
-                aux1= L - distx;
-                aux2= L - disty;
+                // Obtengo el cuadrado determinado por la retícula de la partícula 2 en cuyo interior se encuentra la partícula 1
+            double incx=posx[i]-posx[j];
+            double incxraro;
 
-                if(distx>aux1) distx=aux1;
-                else distx=distx;
+            if(posx[i]<=posx[j]) incxraro=posx[i]-posx[j]+L;
+            else incxraro=posx[i]-posx[j]-L;
 
-                if(disty>aux2) disty=aux2;
-                else disty=disty;
+            double incy=posy[i]-posy[j];
+            double incyraro;
 
-                */
-      distx = fabs(posx[i] - posx[j]);
-     disty = fabs(posy[i] - posy[j]);
+            if(posy[i]<=posy[j]) incyraro=posy[i]-posy[j]+L;
+            else incyraro=posy[i]-posy[j]-L;
 
-    // Aplicar condiciones periódicas
-    if (distx > L / 2.0) distx = L - distx;
-    if (disty > L / 2.0) disty = L - disty;
+            // Calculo las posibles distancias al cuadrado, la que sea mínima es la verdadera
+            double d1=incx*incx+incy*incy;
+            double d2=incxraro*incxraro+incy*incy;
+            double d3=incx*incx+incyraro*incyraro;
+            double d4=incxraro*incxraro+incyraro*incyraro;
 
-    
-  /*
-   
-                distx = (posx[i] - posx[j]) -L*round((posx[i] - posx[j])/L);
-                disty = (posy[i] - posy[j]) -L*round((posy[i] - posy[j])/L);
-
-     */
-   
-      /*          distx = fabs(posx[i] - posx[j]);
-                disty = fabs(posy[i] - posy[j]);
-               
-                if (distx > L / 2.0) distx = L - distx;
-               else if (distx < L/2.) distx = L + distx;
-               if (disty > L / 2.0) disty = L - disty;
-                else if (distx < L/2.) disty = L + disty;
-
-        */
-
-/*
-                distx = (posx[i] - posx[j]);
-                disty = (posy[i] - posy[j]);
-
-             if(distx > L/2.)   distx = distx - L;
-                else if(distx < -L/2.) distx = distx + L;
-            if(disty > L/2.) disty = disty - L;
-             else if(disty < -L/2.) disty = disty + L;
-
-             */
-/*
-            distx =  (posx[i] - posx[j]);
-            disty = (posy[i] - posy[j]);
-
-            if (fabs(distx) > L/2.){
-                distx = -(L - fabs(distx))*(distx/fabs(distx));
+            // Si la distancia usual es la menor, el vector es el usual
+            if(d1<=d2 && d1<=d3 && d1<=d4) {
+            rdif[0]=incx;
+            rdif[1]=incy;
+            distancia= sqrt(d1);
             }
 
-            if (fabs(disty) > L/2.) {
-                disty = -(L-fabs(disty))*(disty/fabs(disty));
+            // Si es la segunda, pues el correspondiente, y así
+            else if(d2<=d1 && d2<=d3 && d2<=d4) {
+            rdif[0]=incxraro;
+            rdif[1]=incy;
+            distancia = sqrt(d2);
             }
 
-            */
-            
-               // distx = distx - round(distx / (2 * L)) * (2. * L);
-               // disty = disty - round(disty / (2 * L)) * (2. * L);
-                distancia = sqrt(distx * distx + disty * disty);
+            else if(d3<=d1 && d3<=d2 && d3<=d4) {
+            rdif[0]=incx;
+            rdif[1]=incyraro;
+            distancia = sqrt(d3);
+            }
 
-                if(distancia==0.) distancia=0.001;
+            else {
+            rdif[0]=incxraro;
+            rdif[1]=incyraro;
+            distancia= sqrt(d4);
+            }
 
                 if(distancia<3.){
-                aceleracion[i] +=  ((posx[i] - posx[j])/distancia)*(48./ pow(distancia, 13)) - (24.0 / pow(distancia, 7)) ;
+              //  aceleracion[i] +=  ((posx[i] - posx[j])/distancia)*(48./ pow(distancia, 13)) - (24.0 / pow(distancia, 7)) ;
+                aceleracionx[i]+=24*(2-pow(distancia,6))*rdif[0]/(pow(distancia,14));
+                aceleraciony[i]+=24*(2-pow(distancia,6))*rdif[1]/(pow(distancia,14));
                 }
             }
         }
@@ -403,25 +383,22 @@ void imprimirCoordenadas(double *x, double *y, int n)
 }
 
 
-void contorno(double *pos, int tampart, int longitud) 
+void contorno(double pos[] , double velocidad[], double *momento, int tampart, int longitud) 
 {
     int i;
-    long double k;
+    // Itero sobre átomos y dimensiones
+      // Para cada partícula
+    for(int i=0; i<tampart; i++) {
 
-    for (i = 0; i < tampart; i++) {
-     //  k=fmod(fabs(pos[i]), longitud) +0.0;
-        if (pos[i] >= longitud) 
-        {  // if(k==0) pos[i] = (long double);
-            pos[i] =  fmod(pos[i], longitud);
+            // Si ha cruzado, añade la contribución correspondiente a momentosparaP y reduce
+            if(pos[i]>= longitud || pos[i]<0) {
+                momento[0]+=2.*fabs(velocidad[i]);
 
-        }
-        if (pos[i] <= 0.) {
-
-            pos[i] =  longitud - fmod(fabs(pos[i]), longitud);
-        }
-        else pos[i]=pos[i];
+                pos[i]+= -longitud*floor(pos[i]/longitud);
+            }
     }
 }
+
 
 // Función que calcula la temperatura
 double temperatura(double *vx, double *vy, int final, int inicial, int dim)
