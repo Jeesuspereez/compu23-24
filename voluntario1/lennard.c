@@ -49,7 +49,7 @@ int main(void)
     archivo__ = fopen(tempo, "w");
 
     // Definición de variables
-    int i, filas, j, k, N, L, sigma, epsilon;
+    int i, filas, j, k, N, L, sigma, epsilon, numiter;
     double *m, *r_x, *r_y, *v_x, *w_x, *w_y, *v_y, *a_x, *a_y, *momento, t, h, velocidades, T;
 
     t = 0;
@@ -60,6 +60,7 @@ int main(void)
     L = 10; // tamaño de la caja
     N = 15; // numero de particulas
     filas = N;
+    numiter=800000;
 
     // Asignando memoria para los vectores
     m = (double *)malloc((filas+1) * sizeof(double));
@@ -101,7 +102,7 @@ int main(void)
     aceleracion(a_x, a_y, r_x, r_y, L, filas);
 
     /* ALGORITMO DE VERLET */
-    for (int paso = 0; paso < 100000; paso++)
+    for (int paso = 0; paso < numiter; paso++)
     {
 
         // Calculando nuevas posiciones
@@ -170,7 +171,7 @@ int main(void)
         fprintf(archivo_cinetic, "%.10f\n", cin);
         fprintf(archivo_potenciale, "%.10f\n", V);
 
-         fprintf(archivo__, "%i\n", paso);
+         fprintf(archivo__, "%f\n", paso*h);
         
     }
 
@@ -329,19 +330,46 @@ double potencial(double *masa, double *posx, double *posy, int n, int L)
         {
             if (i != j)
             {
+// Obtengo el cuadrado determinado por la retícula de la partícula 2 en cuyo interior se encuentra la partícula 1
+            double incx=posx[i]-posx[j];
+            double incxraro;
 
-                distx = fabs(posx[i] - posx[j]);
-                disty = fabs(posy[i] - posy[j]);
-               
-                if (distx > L / 2.0) distx = L - distx;
-                if (disty > L / 2.0) disty = L - disty;
+            if(posx[i]<=posx[j]) incxraro=posx[i]-posx[j]+L;
+            else incxraro=posx[i]-posx[j]-L;
 
-                distancia = sqrt(distx * distx + disty * disty);
+            double incy=posy[i]-posy[j];
+            double incyraro;
 
-                 if(distancia==0.) distancia=0.001;
+            if(posy[i]<=posy[j]) incyraro=posy[i]-posy[j]+L;
+            else incyraro=posy[i]-posy[j]-L;
+
+            // Calculo las posibles distancias al cuadrado, la que sea mínima es la verdadera
+            double d1=incx*incx+incy*incy;
+            double d2=incxraro*incxraro+incy*incy;
+            double d3=incx*incx+incyraro*incyraro;
+            double d4=incxraro*incxraro+incyraro*incyraro;
+
+            // Si la distancia usual es la menor, el vector es el usual
+            if(d1<=d2 && d1<=d3 && d1<=d4) {
+            distancia= sqrt(d1);
+            }
+
+            // Si es la segunda, pues el correspondiente, y así
+            else if(d2<=d1 && d2<=d3 && d2<=d4) {
+            distancia = sqrt(d2);
+            }
+
+            else if(d3<=d1 && d3<=d2 && d3<=d4) {
+            distancia = sqrt(d3);
+            }
+
+            else {
+            distancia= sqrt(d4);
+            }
 
                 epotencial +=  4 * (pow((distancia), -12) - pow((distancia), -6));
             }
+
         }
     }
 
