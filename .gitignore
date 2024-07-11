@@ -43,6 +43,8 @@
 *.dylib
 *.txt
 *.dat
+*.png
+*.pdf
 
 # Executables
 *.exe

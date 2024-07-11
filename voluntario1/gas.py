@@ -19,11 +19,14 @@ def leer_datos(archivo):
 # Leer datos del archivo
 datos = leer_datos('lennard.txt')
 
+#Longitud de la caja
+L=4
+
 # Configuración de la animación
 fig, ax = plt.subplots()
 sc = ax.scatter([], [])
-ax.set_xlim(0, 10)  # Ajusta los límites x e y según tus datos
-ax.set_ylim(0, 10)
+ax.set_xlim(0, L)  # Ajusta los límites x e y según tus datos
+ax.set_ylim(0, L)
 ax.set_xlabel('Posición x')
 ax.set_ylabel('Posición y')
 ax.set_title('Movimiento de las partículas')

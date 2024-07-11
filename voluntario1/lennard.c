@@ -20,6 +20,10 @@ void imprimirCoordenadas(double *x, double *y, int n);
 void contorno(double pos[] , double velocidad[], double *momento, int tampart, int longitud);
 double temperatura(double *vx, double *vy, int final, int inicial, int dim);
 void generate_array(double *posx, double *posy, int n, int L);
+void posicioncuad(double *posx, double *posy, int n, int L);
+double aleatorio();
+
+
 
 int main(void)
 {
@@ -49,18 +53,22 @@ int main(void)
     archivo__ = fopen(tempo, "w");
 
     // Definición de variables
-    int i, filas, j, k, N, L, sigma, epsilon, numiter;
-    double *m, *r_x, *r_y, *v_x, *w_x, *w_y, *v_y, *a_x, *a_y, *momento, t, h, velocidades, T;
+    int i, filas, j, k, N, L, sigma, epsilon, numiter, inicio, fin, veces, Lindice;
+    double *m, *r_x, *r_y, *v_x, *w_x, *w_y, *v_y, *a_x, *a_y, *momento, t, h, velocidades, T, suma, vesp,momentillo, P;
 
     t = 0;
     h = 0.002; // paso
     sigma = 1.;
     epsilon = 1.;
 
-    L = 10; // tamaño de la caja
-    N = 15; // numero de particulas
+    L = 4; // tamaño de la caja
+    N = 16; // numero de particulas
     filas = N;
-    numiter=800000;
+    numiter=200000; //numero de iteraciones del gas
+    inicio=20; //inicio para histograma velocidades
+    fin=50; //fin para histograma velocidades
+    momentillo=0.0; // inicializamos el momento
+    Lindice=0;
 
     // Asignando memoria para los vectores
     m = (double *)malloc((filas+1) * sizeof(double));
@@ -88,9 +96,13 @@ int main(void)
         a_y[i] = 0;
     }
 
+    veces=0;
+    suma=0.0;
+
     //asignamos posicion random
     // generar_posiciones(r_x, r_y, N, L);
-    generate_array(r_x, r_y, N, L);
+    //generate_array(r_x, r_y, N, L);
+    posicioncuad(r_x, r_y, N, L);
 
     //generamos velocidades
     generar_velocidades(v_x, v_y, filas);
@@ -124,7 +136,9 @@ int main(void)
         calculov(v_x, w_x, a_x, h, filas);
         calculov(v_y, w_y, a_y, h, filas);
 
-        if(paso%100==0){
+
+          if(paso%1000==0){
+       // if(paso%100==0){
         //imprimo posiciones nuevas
         for (k = 0; k < filas; k++)
         {
@@ -134,38 +148,26 @@ int main(void)
         fprintf(archivo, "\n");
         }
 
+
         // Calculando energía y momento angular total
         double V = potencial(m, r_x, r_y, N, L);
         double cin = cinetica(m, v_x, v_y, filas);
         double energiatotal = cin + V;
 
     
-        //calculamos la temperatura
-        int inicial=20;
-        int final=50;
-        velocidades=0.;
-
-        if(paso>=inicial && paso<=final){
-        for(int i=0; i<filas; i++)
-        {
-        velocidades+= v_x[i]*v_x[i] + v_y[i]*v_y[i];
-        }
-        }
-
-        if(paso==final){
-         T= 0.5*velocidades/(filas*1.0*(final-inicial));
-        printf ("%.10f\n", T);
-        }
-
-        
-
-    /*   //para el histograma de velocidades:
-        if (paso >= paso/2 && paso % 10 == 0) { // Guardar velocidades después de alcanzar el equilibrio
+       //para el histograma de velocidades:
+        if (paso*h >=inicio && (paso*h) <=fin) { // Guardar velocidades después de alcanzar el equilibrio
             for (int i = 0; i < filas; i++) {
-                fprintf(velocity, "%.5f %.5f\n", v_x[i], v_y[i]);
+     //           fprintf(velocity, "%.5f %.5f %.5f\n", v_x[i], v_y[i], v_x[i]*v_x[i] + v_y[i]*v_y[i]); //sin modulo de velocidades
+                 fprintf(velocity, "%.5f  %.5f %.5f %.5f\n", v_x[i], v_y[i], sqrt(v_x[i]*v_x[i] + v_y[i]*v_y[i]), fabs(v_x[i])); //con modulo de velocidades
+
+                 suma+=v_x[i]*v_x[i] + v_y[i]*v_y[i];
+                 veces++;
             }
+            momentillo+=momento[0]/(paso*h*4*L); 
+            Lindice++;
         }
-     */ 
+      
         // Escribiendo en los archivos
         fprintf(archivo_, "%.10f\n", energiatotal);
         fprintf(archivo_cinetic, "%.10f\n", cin);
@@ -174,6 +176,18 @@ int main(void)
          fprintf(archivo__, "%f\n", paso*h);
         
     }
+
+    T=suma/(2.0*veces);
+    P=momentillo/Lindice;
+
+    vesp=sqrt(T);
+
+    printf("La temperatura es: ");
+    printf("%.10f\n", T);
+    printf("La velocidad esperada es: ");
+    printf("%.10f\n", vesp);
+    printf("La presion es: ");
+    printf("%.10f\n", P);
 
     // Liberando memoria asignada para los vectores
     free(m);
@@ -391,13 +405,16 @@ void generar_velocidades(double *velx, double *vely, int dimension)
 {
     int valor_aleatorio, valor_aleatorio2, i;
     double theta, r;
-    r = 1.;
+    r = 4.;
 
     for (i = 0; i < dimension; i++)
     {
         theta = 2. * PI * rand() / RAND_MAX;
-        velx[i] = r * cos(theta);
-        vely[i] = r * sin(theta);
+         // velx[i] = (r * cos(theta));
+         // vely[i] = r * sin(theta);
+         //   velx[i] = fabs(r * cos(theta));
+           vely[i] = 0.;
+          velx[i] = 0.;
     }
 }
 
@@ -463,3 +480,18 @@ void generate_array( double *posx, double *posy, int n, int L)
         posy[i] = ( double) 1.0*(value2 + rand2);
     }
 }
+
+void posicioncuad(double *posx, double *posy, int n, int L)
+{
+    // Estado sólido: red cuadrada y parten del reposo
+        for (int i= 0; i<n; i++){
+        posx[i]=0.5+i%L;
+        posy[i]=0.5+(i-i%L)/(1.0*L);
+        }
+}
+
+double aleatorio() 
+{
+    return (double)rand() / (double)RAND_MAX;
+}
+
