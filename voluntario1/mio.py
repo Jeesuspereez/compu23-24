@@ -52,7 +52,7 @@ def mostrar_densidad_probabilidad(datos, m, Kb, T):
     plt.plot(x, y, color='r', linewidth=2, label='Distribución de Velocidades')
 
     # Añadir etiquetas y título
-    plt.title('Histograma del módulo de velocidades para T=0.71U (1U=120K)')
+    plt.title('Histograma del módulo de velocidades para T=3.37U (1U=120K)')
   #  plt.title('Histograma del valor absoluto de la velocidad en el eje x para T=0.77U (1U=120K)')
     plt.xlabel('Valores de la velocidad en UDS (1UD=1.58*10^2 m/s)')
     plt.ylabel('Densidad de probabilidad')
@@ -63,7 +63,7 @@ def mostrar_densidad_probabilidad(datos, m, Kb, T):
 # Parámetros para la función P(v)
 m = 1.0    # masa (ejemplo)
 Kb = 1.0  # constante de Boltzmann (ejemplo)
-T = 0.7075938680  # temperatura (ejemplo)
+T = 3.3664200882  # temperatura (ejemplo)
 
 # Nombre del archivo de texto
 nombre_archivo = 'velocity.txt'

@@ -22,8 +22,8 @@ double temperatura(double *vx, double *vy, int final, int inicial, int dim);
 void generate_array(double *posx, double *posy, int n, int L);
 void posicioncuad(double *posx, double *posy, int n, int L);
 double aleatorio();
-
-
+void calentarrapido(double *vx, double *vy, int N, double aumento);
+double distanciapart(double posx1, double posx2, double posy1,double posy2, int N, int L);
 
 int main(void)
 {
@@ -52,9 +52,23 @@ int main(void)
     char tempo[] = "tiempo.txt";
     archivo__ = fopen(tempo, "w");
 
+    FILE *archivuo;
+    char fluctu[] = "fluctuaciones.txt";
+    archivuo = fopen(fluctu, "w");
+
+     FILE *temp;
+    char tempera[] = "temperatura.txt";
+    temp = fopen(tempera, "w");
+
+    FILE *correlacion;
+    char corre[] = "correlacion.txt";
+    correlacion = fopen(corre, "w");
+
+
     // Definición de variables
     int i, filas, j, k, N, L, sigma, epsilon, numiter, inicio, fin, veces, Lindice;
-    double *m, *r_x, *r_y, *v_x, *w_x, *w_y, *v_y, *a_x, *a_y, *momento, t, h, velocidades, T, suma, vesp,momentillo, P;
+    double *m, *r_x, *r_y, *v_x, *w_x, *w_y, *v_y, *a_x, *a_y, *momento, t, h, velocidades, T, suma, vesp,momentillo, P, aumentoT, *r_xo, *r_yo, flux, Ttiempo;
+    double xfijo, yfijo, xvariab, yvariab, correcaminos;
 
     t = 0;
     h = 0.002; // paso
@@ -64,11 +78,13 @@ int main(void)
     L = 4; // tamaño de la caja
     N = 16; // numero de particulas
     filas = N;
-    numiter=200000; //numero de iteraciones del gas
+    numiter=2.*50000; //numero de iteraciones del gas
     inicio=20; //inicio para histograma velocidades
     fin=50; //fin para histograma velocidades
     momentillo=0.0; // inicializamos el momento
     Lindice=0;
+    aumentoT=1.1;
+    flux=0.;
 
     // Asignando memoria para los vectores
     m = (double *)malloc((filas+1) * sizeof(double));
@@ -81,6 +97,8 @@ int main(void)
     a_x = (double *)malloc((filas+1) * sizeof(double));
     a_y = (double *)malloc((filas+1) * sizeof(double));
     momento = (double *)malloc((filas+1) * sizeof(double));
+    r_xo = (double *)malloc((filas+1) * sizeof(double));
+    r_yo = (double *)malloc((filas+1) * sizeof(double));
 
     // Inicializando aceleraciones a cero
     for (i = 0; i < filas; i++)
@@ -99,10 +117,17 @@ int main(void)
     veces=0;
     suma=0.0;
 
-    //asignamos posicion random
+    //Asignamos posiciones a las particulas
     // generar_posiciones(r_x, r_y, N, L);
     //generate_array(r_x, r_y, N, L);
     posicioncuad(r_x, r_y, N, L);
+
+    //apartado de calentar
+    for(i=0; i<N; i++)
+    {
+        r_xo[i]=r_x[i];
+        r_yo[i]=r_y[i];
+    }
 
     //generamos velocidades
     generar_velocidades(v_x, v_y, filas);
@@ -136,7 +161,33 @@ int main(void)
         calculov(v_x, w_x, a_x, h, filas);
         calculov(v_y, w_y, a_y, h, filas);
 
+       // if(paso*h==20 || paso*h==30 || paso*h==35 || paso*h==45){
+       if(paso*h==180){
+        calentarrapido(v_x, v_y, N, aumentoT);
+        }
 
+        Ttiempo=0.;
+        for(int g=0; g<N; g++){
+            Ttiempo+=v_x[g]*v_x[g] + v_y[g]*v_y[g];
+        }
+        Ttiempo=Ttiempo/(N);
+
+        fprintf(temp, "%.10f", Ttiempo);
+         fprintf(temp, "\n");
+
+        flux=0.;
+        for(int s=0; s<N; s++)
+        {
+            flux+= (r_x[s]+ r_y[s]-r_xo[s]-r_yo[s])*(r_x[s]+ r_y[s]-r_xo[s]-r_yo[s]);
+        }
+        flux=flux/N;
+        
+      // flux+=(r_x[0]+ r_y[0]-r_xo[0]-r_yo[0])*(r_x[0]+ r_y[0]-r_xo[0]-r_yo[0]);
+
+         fprintf(archivuo, "%.10f", flux);
+         fprintf(archivuo, "\n");
+
+    //almacenamos la posicion de la particula cada x iteraciones porque si no se ve muy lento
           if(paso%1000==0){
        // if(paso%100==0){
         //imprimo posiciones nuevas
@@ -147,6 +198,31 @@ int main(void)
         }
         fprintf(archivo, "\n");
         }
+
+        correcaminos=0.;
+          // El de correlación de pares
+         /* for(i=0; i<N; i++){
+               if(i!=0) {
+                    xfijo=r_x[0];
+                    yfijo=r_y[0];
+                    xvariab=r_x[i];
+                    yvariab=r_y[i];
+                  correcaminos=  distanciapart(xfijo, xvariab, yfijo, yvariab, N, L);
+
+                     fprintf(correlacion, "%.10f\n", correcaminos);
+                 
+                }
+                
+            }
+             */
+            
+                    xfijo=r_x[0];
+                    yfijo=r_y[0];
+                    xvariab=r_x[5];
+                    yvariab=r_y[5];
+                  correcaminos=  distanciapart(xfijo, xvariab, yfijo, yvariab, N, L)*distanciapart(xfijo, xvariab, yfijo, yvariab, N, L);
+
+            fprintf(correlacion, "%.10f\n", correcaminos);
 
 
         // Calculando energía y momento angular total
@@ -164,7 +240,7 @@ int main(void)
                  suma+=v_x[i]*v_x[i] + v_y[i]*v_y[i];
                  veces++;
             }
-            momentillo+=momento[0]/(paso*h*4*L); 
+            momentillo+=momento[0]/(paso*h*L*L); 
             Lindice++;
         }
       
@@ -200,6 +276,8 @@ int main(void)
     free(a_x);
     free(a_y);
     free(momento);
+    free(r_xo);
+    free(r_yo);
 
     // Cerrando archivos
     fclose(archivo);
@@ -208,6 +286,9 @@ int main(void)
     fclose(archivo__);
     fclose(archivo_cinetic);
     fclose(archivo_potenciale);
+    fclose(archivuo);
+    fclose(temp);
+    fclose(correlacion);
 
     return 0;
 }
@@ -408,7 +489,7 @@ void generar_velocidades(double *velx, double *vely, int dimension)
     r = 4.;
 
     for (i = 0; i < dimension; i++)
-    {
+    { 
         theta = 2. * PI * rand() / RAND_MAX;
          // velx[i] = (r * cos(theta));
          // vely[i] = r * sin(theta);
@@ -495,3 +576,54 @@ double aleatorio()
     return (double)rand() / (double)RAND_MAX;
 }
 
+void calentarrapido(double *vx, double *vy, int N, double aumento)
+{
+    for(int i=0; i<N; i++)
+    {
+        vx[i]=vx[i]*aumento;
+        vy[i]=vy[i]*aumento;
+    }
+}
+
+double distanciapart(double posx1, double posx2, double posy1,double posy2, int N, int L)
+{
+
+    double distancia;
+    double incx=posx1-posx2;
+            double incxraro;
+
+            if(posx1<=posx2) incxraro=posx1-posx2+L;
+            else incxraro=posx1-posx2-L;
+
+            double incy=posy1-posy2;
+            double incyraro;
+
+            if(posy1<=posy2) incyraro=posy1-posy2+L;
+            else incyraro=posy1-posy2-L;
+
+            // Calculo las posibles distancias al cuadrado, la que sea mínima es la verdadera
+            double d1=incx*incx+incy*incy;
+            double d2=incxraro*incxraro+incy*incy;
+            double d3=incx*incx+incyraro*incyraro;
+            double d4=incxraro*incxraro+incyraro*incyraro;
+
+            // Si la distancia usual es la menor, el vector es el usual
+            if(d1<=d2 && d1<=d3 && d1<=d4) {
+            distancia= sqrt(d1);
+            }
+
+            // Si es la segunda, pues el correspondiente, y así
+            else if(d2<=d1 && d2<=d3 && d2<=d4) {
+            distancia = sqrt(d2);
+            }
+
+            else if(d3<=d1 && d3<=d2 && d3<=d4) {
+            distancia = sqrt(d3);
+            }
+
+            else {
+            distancia= sqrt(d4);
+            }
+
+            return distancia;
+}
