@@ -22,7 +22,7 @@ double temperatura(double *vx, double *vy, int final, int inicial, int dim);
 void generate_array(double *posx, double *posy, int n, int L);
 void posicioncuad(double *posx, double *posy, int n, int L);
 double aleatorio();
-void calentarrapido(double *vx, double *vy, int N, double aumento);
+void calentar(double *vx, double *vy, int N, double aumento);
 double distanciapart(double posx1, double posx2, double posy1,double posy2, int N, int L);
 
 int main(void)
@@ -78,12 +78,12 @@ int main(void)
     L = 4; // tamaño de la caja
     N = 16; // numero de particulas
     filas = N;
-    numiter=2.*50000; //numero de iteraciones del gas
+    numiter=1000; //numero de iteraciones del gas
     inicio=20; //inicio para histograma velocidades
     fin=50; //fin para histograma velocidades
     momentillo=0.0; // inicializamos el momento
     Lindice=0;
-    aumentoT=1.1;
+    aumentoT=1.;
     flux=0.;
 
     // Asignando memoria para los vectores
@@ -119,8 +119,8 @@ int main(void)
 
     //Asignamos posiciones a las particulas
     // generar_posiciones(r_x, r_y, N, L);
-    //generate_array(r_x, r_y, N, L);
-    posicioncuad(r_x, r_y, N, L);
+   // generate_array(r_x, r_y, N, L);
+     posicioncuad(r_x, r_y, N, L);
 
     //apartado de calentar
     for(i=0; i<N; i++)
@@ -163,9 +163,10 @@ int main(void)
 
        // if(paso*h==20 || paso*h==30 || paso*h==35 || paso*h==45){
        if(paso*h==180){
-        calentarrapido(v_x, v_y, N, aumentoT);
+        calentar(v_x, v_y, N, aumentoT);
         }
 
+        //calculamos la temperatura instantanea
         Ttiempo=0.;
         for(int g=0; g<N; g++){
             Ttiempo+=v_x[g]*v_x[g] + v_y[g]*v_y[g];
@@ -175,6 +176,7 @@ int main(void)
         fprintf(temp, "%.10f", Ttiempo);
          fprintf(temp, "\n");
 
+        // calculamos la desviacion de las particulas respecto de su posicion inicial
         flux=0.;
         for(int s=0; s<N; s++)
         {
@@ -182,13 +184,12 @@ int main(void)
         }
         flux=flux/N;
         
-      // flux+=(r_x[0]+ r_y[0]-r_xo[0]-r_yo[0])*(r_x[0]+ r_y[0]-r_xo[0]-r_yo[0]);
 
          fprintf(archivuo, "%.10f", flux);
          fprintf(archivuo, "\n");
 
     //almacenamos la posicion de la particula cada x iteraciones porque si no se ve muy lento
-          if(paso%1000==0){
+          if(paso%100==0){
        // if(paso%100==0){
         //imprimo posiciones nuevas
         for (k = 0; k < filas; k++)
@@ -199,23 +200,8 @@ int main(void)
         fprintf(archivo, "\n");
         }
 
+       //calculamos la desviacion cuadratica media de las particulas
         correcaminos=0.;
-          // El de correlación de pares
-         /* for(i=0; i<N; i++){
-               if(i!=0) {
-                    xfijo=r_x[0];
-                    yfijo=r_y[0];
-                    xvariab=r_x[i];
-                    yvariab=r_y[i];
-                  correcaminos=  distanciapart(xfijo, xvariab, yfijo, yvariab, N, L);
-
-                     fprintf(correlacion, "%.10f\n", correcaminos);
-                 
-                }
-                
-            }
-             */
-            
                     xfijo=r_x[0];
                     yfijo=r_y[0];
                     xvariab=r_x[5];
@@ -235,11 +221,12 @@ int main(void)
         if (paso*h >=inicio && (paso*h) <=fin) { // Guardar velocidades después de alcanzar el equilibrio
             for (int i = 0; i < filas; i++) {
      //           fprintf(velocity, "%.5f %.5f %.5f\n", v_x[i], v_y[i], v_x[i]*v_x[i] + v_y[i]*v_y[i]); //sin modulo de velocidades
-                 fprintf(velocity, "%.5f  %.5f %.5f %.5f\n", v_x[i], v_y[i], sqrt(v_x[i]*v_x[i] + v_y[i]*v_y[i]), fabs(v_x[i])); //con modulo de velocidades
+                 fprintf(velocity, "%.5f %.5f %.5f %.5f %.5f\n", v_x[i], v_y[i], sqrt(v_x[i]*v_x[i] + v_y[i]*v_y[i]), fabs(v_x[i]), fabs(v_y[i])); //con modulo de velocidades
 
                  suma+=v_x[i]*v_x[i] + v_y[i]*v_y[i];
                  veces++;
             }
+            //para el calculo de la presio
             momentillo+=momento[0]/(paso*h*L*L); 
             Lindice++;
         }
@@ -253,9 +240,13 @@ int main(void)
         
     }
 
+    //calculamos la temperatura promedio
     T=suma/(2.0*veces);
+
+    //calculamos la presión promedio
     P=momentillo/Lindice;
 
+    //calculamos la velocidad esperada del histograma
     vesp=sqrt(T);
 
     printf("La temperatura es: ");
@@ -486,16 +477,16 @@ void generar_velocidades(double *velx, double *vely, int dimension)
 {
     int valor_aleatorio, valor_aleatorio2, i;
     double theta, r;
-    r = 4.;
+    r = 1.;
 
     for (i = 0; i < dimension; i++)
     { 
         theta = 2. * PI * rand() / RAND_MAX;
-         // velx[i] = (r * cos(theta));
-         // vely[i] = r * sin(theta);
-         //   velx[i] = fabs(r * cos(theta));
-           vely[i] = 0.;
-          velx[i] = 0.;
+         velx[i] = (r * cos(theta));
+          vely[i] = r * sin(theta);
+       //    velx[i] = fabs(r * cos(theta));
+          // vely[i] = 0.;
+        //  velx[i] = 0.;
     }
 }
 
@@ -576,7 +567,7 @@ double aleatorio()
     return (double)rand() / (double)RAND_MAX;
 }
 
-void calentarrapido(double *vx, double *vy, int N, double aumento)
+void calentar(double *vx, double *vy, int N, double aumento)
 {
     for(int i=0; i<N; i++)
     {
