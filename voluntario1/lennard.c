@@ -24,6 +24,7 @@ void posicioncuad(double *posx, double *posy, int n, int L);
 double aleatorio();
 void calentar(double *vx, double *vy, int N, double aumento);
 double distanciapart(double posx1, double posx2, double posy1,double posy2, int N, int L);
+void hexagono(double *x, double *y, int num_particles, int size);
 
 int main(void)
 {
@@ -78,12 +79,12 @@ int main(void)
     L = 4; // tamaño de la caja
     N = 16; // numero de particulas
     filas = N;
-    numiter=1000; //numero de iteraciones del gas
+    numiter=2*50000; //numero de iteraciones del gas
     inicio=20; //inicio para histograma velocidades
     fin=50; //fin para histograma velocidades
     momentillo=0.0; // inicializamos el momento
     Lindice=0;
-    aumentoT=1.;
+    aumentoT=1.5;
     flux=0.;
 
     // Asignando memoria para los vectores
@@ -121,6 +122,8 @@ int main(void)
     // generar_posiciones(r_x, r_y, N, L);
    // generate_array(r_x, r_y, N, L);
      posicioncuad(r_x, r_y, N, L);
+   //  hexagono(r_x, r_y, N, L);
+
 
     //apartado de calentar
     for(i=0; i<N; i++)
@@ -161,8 +164,8 @@ int main(void)
         calculov(v_x, w_x, a_x, h, filas);
         calculov(v_y, w_y, a_y, h, filas);
 
-       // if(paso*h==20 || paso*h==30 || paso*h==35 || paso*h==45){
-       if(paso*h==180){
+       if(paso*h==20 || paso*h==30 || paso*h==35 || paso*h==45){
+      // if(paso*h==180){
         calentar(v_x, v_y, N, aumentoT);
         }
 
@@ -482,11 +485,11 @@ void generar_velocidades(double *velx, double *vely, int dimension)
     for (i = 0; i < dimension; i++)
     { 
         theta = 2. * PI * rand() / RAND_MAX;
-         velx[i] = (r * cos(theta));
-          vely[i] = r * sin(theta);
+        // velx[i] = (r * cos(theta));
+         // vely[i] = r * sin(theta);
        //    velx[i] = fabs(r * cos(theta));
-          // vely[i] = 0.;
-        //  velx[i] = 0.;
+           vely[i] = 0.;
+          velx[i] = 0.;
     }
 }
 
@@ -617,4 +620,39 @@ double distanciapart(double posx1, double posx2, double posy1,double posy2, int 
             }
 
             return distancia;
+}
+
+void hexagono(double *x, double *y, int num_particles, int size)
+{
+    int index = 0;
+    int layer = 0;
+    int centerX = size / 2;
+    int centerY = size / 2;
+
+    // Distribuir partículas en un patrón hexagonal compacto
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            if ((i + j) % 2 == 0 && index < num_particles) {
+                x[index] = j;
+                y[index] = i;
+                index++;
+            }
+        }
+    }
+
+    // Ajustar si no se llenaron todas las posiciones
+    while (index < num_particles && layer <= size / 2) {
+        for (int i = -layer; i <= layer; i++) {
+            for (int j = -layer; j <= layer; j++) {
+                int newX = centerX + j;
+                int newY = centerY + i;
+                if ((newX + newY) % 2 == 0 && newX >= 0 && newX < size && newY >= 0 && newY < size && index < num_particles) {
+                    x[index] = newX;
+                    y[index] = newY;
+                    index++;
+                }
+            }
+        }
+        layer++;
+    }
 }
