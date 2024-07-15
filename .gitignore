@@ -49,7 +49,8 @@
 *.i*86
 *.x86_64
 *.hex
-*.pdf
+*.txt
+*.dat
 
 # Debug files
 *.dSYM/
