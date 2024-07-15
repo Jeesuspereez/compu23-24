@@ -15,7 +15,7 @@ void calculow(double *aux, double *vel, double *acel, double h, int n);
 double cinetica(double *masa, double *velx, double *vely, int n);
 double potencial(double *masa, double *posx, double *posy, int n, int L);
 void generar_posiciones(double *posx, double *posy, int dimension, int longitud);
-void generar_velocidades(double *velx, double *vely, int dimension);
+void generar_velocidades(double *velx, double *vely, double mod,  int dimension);
 void imprimirCoordenadas(double *x, double *y, int n);
 void contorno(double pos[] , double velocidad[], double *momento, int tampart, int longitud);
 double temperatura(double *vx, double *vy, int final, int inicial, int dim);
@@ -68,7 +68,7 @@ int main(void)
 
     // Definición de variables
     int i, filas, j, k, N, L, sigma, epsilon, numiter, inicio, fin, veces, Lindice;
-    double *m, *r_x, *r_y, *v_x, *w_x, *w_y, *v_y, *a_x, *a_y, *momento, t, h, velocidades, T, suma, vesp,momentillo, P, aumentoT, *r_xo, *r_yo, flux, Ttiempo;
+    double *m, *r_x, *r_y, *v_x, *w_x, *w_y, *v_y, *a_x, *a_y, *momento, t, h, velocidades, T, suma, vesp,momentillo, P, aumentoT, *r_xo, *r_yo, flux, Ttiempo, modulo;
     double xfijo, yfijo, xvariab, yvariab, correcaminos;
 
     t = 0;
@@ -79,13 +79,14 @@ int main(void)
     L = 4; // tamaño de la caja
     N = 16; // numero de particulas
     filas = N;
-    numiter=2*50000; //numero de iteraciones del gas
+    numiter=10000; //numero de iteraciones del gas
     inicio=20; //inicio para histograma velocidades
     fin=50; //fin para histograma velocidades
     momentillo=0.0; // inicializamos el momento
     Lindice=0;
-    aumentoT=1.5;
+    aumentoT=1.0; //factor para calentar el sistema
     flux=0.;
+    modulo=0.; //modulo de la velocidad inicial
 
     // Asignando memoria para los vectores
     m = (double *)malloc((filas+1) * sizeof(double));
@@ -120,8 +121,8 @@ int main(void)
 
     //Asignamos posiciones a las particulas
     // generar_posiciones(r_x, r_y, N, L);
-   // generate_array(r_x, r_y, N, L);
-     posicioncuad(r_x, r_y, N, L);
+   //  generate_array(r_x, r_y, N, L);
+      posicioncuad(r_x, r_y, N, L);
    //  hexagono(r_x, r_y, N, L);
 
 
@@ -133,7 +134,7 @@ int main(void)
     }
 
     //generamos velocidades
-    generar_velocidades(v_x, v_y, filas);
+    generar_velocidades(v_x, v_y, modulo ,filas);
 
     //mostramos vectores posiciones por pantalla a ver si esta bien
     imprimirCoordenadas(r_x, r_y, filas);
@@ -349,7 +350,6 @@ void aceleracion(double *aceleracionx, double *aceleraciony, double *posx, doubl
             }
 
                 if(distancia<3.){
-              //  aceleracion[i] +=  ((posx[i] - posx[j])/distancia)*(48./ pow(distancia, 13)) - (24.0 / pow(distancia, 7)) ;
                 aceleracionx[i]+=24*(2-pow(distancia,6))*rdif[0]/(pow(distancia,14));
                 aceleraciony[i]+=24*(2-pow(distancia,6))*rdif[1]/(pow(distancia,14));
                 }
@@ -476,20 +476,20 @@ void generar_posiciones(double *posx, double *posy, int dimension, int longitud)
 }
 
 // Función que genera velocidades aleatorias
-void generar_velocidades(double *velx, double *vely, int dimension)
+void generar_velocidades(double *velx, double *vely, double mod, int dimension)
 {
     int valor_aleatorio, valor_aleatorio2, i;
     double theta, r;
-    r = 1.;
+    r = mod;
 
     for (i = 0; i < dimension; i++)
     { 
         theta = 2. * PI * rand() / RAND_MAX;
-        // velx[i] = (r * cos(theta));
-         // vely[i] = r * sin(theta);
+         velx[i] = (r * cos(theta));
+         vely[i] = r * sin(theta);
        //    velx[i] = fabs(r * cos(theta));
-           vely[i] = 0.;
-          velx[i] = 0.;
+         //  vely[i] = 0.;
+         // velx[i] = 0.;
     }
 }
 
@@ -624,35 +624,33 @@ double distanciapart(double posx1, double posx2, double posy1,double posy2, int 
 
 void hexagono(double *x, double *y, int num_particles, int size)
 {
-    int index = 0;
-    int layer = 0;
-    int centerX = size / 2;
-    int centerY = size / 2;
+    //primeros hexagonos
+   x[0]=0.5;
+   x[1]=x[0] +1.;
+   x[2]= x[1] +2.;
+   x[3]=x[2] + 1.;
 
-    // Distribuir partículas en un patrón hexagonal compacto
-    for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
-            if ((i + j) % 2 == 0 && index < num_particles) {
-                x[index] = j;
-                y[index] = i;
-                index++;
-            }
-        }
-    }
+   y[0]=y[1]=y[2]=y[3]=0.5;
 
-    // Ajustar si no se llenaron todas las posiciones
-    while (index < num_particles && layer <= size / 2) {
-        for (int i = -layer; i <= layer; i++) {
-            for (int j = -layer; j <= layer; j++) {
-                int newX = centerX + j;
-                int newY = centerY + i;
-                if ((newX + newY) % 2 == 0 && newX >= 0 && newX < size && newY >= 0 && newY < size && index < num_particles) {
-                    x[index] = newX;
-                    y[index] = newY;
-                    index++;
-                }
-            }
-        }
-        layer++;
-    }
+   //siguiente fila
+   x[4]=0;
+   x[5]=x[4]+2;
+   x[6]=x[5]+1;
+
+    y[4]=y[5]=y[6]=1.75;
+
+   //siguiente fila
+    x[7]=0.5;
+    x[8]=x[7] +1.;
+    x[9]= x[8] +2.;
+    x[10]=x[9] + 1.;
+    y[7]=y[8]=y[9]=y[10]=3.;
+
+    //ultima
+    x[11]=0;
+    x[12]=x[11]+2;
+    x[13]=x[12]+1;
+
+    y[11]=y[12]=y[13]=4.25;
+
 }

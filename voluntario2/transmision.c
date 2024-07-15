@@ -14,18 +14,23 @@ double aleatorio();
 int main(void)
 {
     //declaracion de variables
-    int i, N, j, n, nciclos, p, m, mT, chivato, chivato2, y;
+    int i, N, j, n, nciclos, p, m, mT, y;
     double complex *fonda, *beta, *alpha, *A_0, *chi;
-    double lambda, h, x_0, sigma, *V, k_0, s, norm, numaleatorio, evaluado, posiblet, anteriort, aux, *tiempillo, K, apartadotres;
-    bool manolo;
+    double lambda, h, x_0, sigma, *V, k_0, s, norm, numaleatorio, aux, *tiempillo, K, apartadotres, pd, auxiliar, normamedir, posicion, energia, iteracion, normapos;
+    int find, activarpos;
 
+    //inicializamos valores
+    find=0;
+    pd=0;
+    posicion=0.;
+    energia=0;
+
+    //si queremos calcular la posicion ponemos activarpos=1 si no le ponemos cualq otro valor por ejemplo 0
+    activarpos=1;
 
      //Inicializo el valor de la serie de números aleatorios
     srand(time(NULL));
 
-    //chivato
-    chivato=0;
-    chivato2=0;
     //abrimos arhcivo de salida
     FILE *archivo;
     archivo = fopen("sch.dat", "w");
@@ -43,6 +48,14 @@ int main(void)
         return 1;
     }
 
+    FILE *pos;
+    pos = fopen("posicion.txt", "w");
+
+    if (pos == NULL) {
+        printf("Error al abrir el archivo.\n");
+        return 1;
+    }
+
     //abrimos arhcivo de salida
     FILE *prueba;
     prueba = fopen("tiempillo.txt", "w");
@@ -52,11 +65,21 @@ int main(void)
         return 1;
     }
 
+
+    //abrimos arhcivo de salida
+    FILE *tiempo;
+    tiempo = fopen("tiempo.txt", "w");
+
+    if (tiempo == NULL) {
+        printf("Error al abrir el archivo.\n");
+        return 1;
+    }
+
     
     //definimos N
     N = 1000;
-  //  p=1000;
-  p=10000;
+    //  p=1000;
+    p=2000;
 
     // Asignar memoria para los vectores
     alpha = (double complex *)malloc((N + 1)*sizeof(double complex));
@@ -80,7 +103,7 @@ int main(void)
     nciclos=50.;
     h=0.01;
     norm=0.;
-    lambda = 0.1;
+    lambda = 0.3;
     k_0 = (2.*PI*nciclos)/(N+0.);
     s = 1./(4.*k_0 *k_0);
     //parametros distribucion
@@ -131,21 +154,8 @@ int main(void)
         alpha[j-1] = -1.0 / ((-2.0 + (2.0 * I / s) - V[j]) + alpha[j]);
     }
 
-    //hacemos el experimento m veces
-m=1000;
-apartadotres=0.;
-for(int expe=0; expe<m; expe++)
-{
-
-        for(y=0; y<p+1 ; y++)
-    {
-        tiempillo[y]=0.;
-    }
-    chivato=0;
-    manolo = false;
-
+        //calculamos la funcion de onda
         for(n=0; n<p+1; n++){
-            manolo = false; 
 
         // 2. Calcular beta utilizando la recurrencia (22).
             for(j=N-2;j>0; j--){
@@ -166,75 +176,104 @@ for(int expe=0; expe<m; expe++)
             fprintf(normadata, "%f", norm);
             fprintf(normadata, "\n");
 
-            // 5. n = n + 1, ir a al paso 2
-            //imprimimos la funcion de onda
-     /*        for(j=0;j<=N;j++){
-             //   fprintf(archivo, "%i, %f, %f, %f, %f\n",j, cabs(fonda[j]), creal(fonda[j]),cimag(fonda[j]), V[j]); //todos paramretros
-                fprintf(archivo, "%i, %f, %f\n",j, cabs(fonda[j]), V[j]); //solo vabs
-            }
-             fprintf(archivo, "\n");
+            //calculamos posicion y energia
 
-             */
+            //posicion
+                iteracion=normapos=0.;
 
-             // Calculamos la probabilidad a la derecha
-            tiempillo[n+1]=detectorD(fonda,N);
-
-            if(tiempillo[n+1]>=tiempillo[n])
-            {
-             //   aux=tiempillo[n+1];
-                chivato++;
-             //   tiempillo[n]=aux;
-                chivato2++;
-            }
-
-            else {
-            manolo=true;
-
-            }
-
-            if(manolo==true){
-            apartadotres+=tiempillo[chivato];
-             numaleatorio=aleatorio();
-                if (numaleatorio<tiempillo[chivato]) {
-                    mT++;
-                    n=p+1;
-                   
+                 for (int g = 0; g <= N; g++)
+                {
+                    iteracion += cabs(fonda[g])*g;
+                    normapos += cabs(fonda[g]);
                 }
 
-      //          else expe++;
+                posicion=1.0*iteracion/normapos;
 
+            fprintf(pos, "%f\n", posicion);
+
+            //archivo de tiempo para graficar pos vs tiempo y energia vs tiempo
+            fprintf(tiempo, "%i\n", n);
+
+            //energia
+
+            /*
+            double suma=0;
+            double norma=0;
+            for (int i = 0; i < N+1; i++)
+            {
+                suma += -creal(psi2[i]*D2psi[i]);
+                norma += cabs(psi2[i]);
             }
+
+            return suma/(2*norma); 
+
+            }*/
+
+            //buscamos el maximo
+            //calculamos la norma total
+            normamedir = 0.0;
+
+            for (int i = 0; i < N + 1; i++) 
+            {
+            normamedir += cabs(fonda[i]) * cabs(fonda[i]);
+            }
+
+          
+
+
+            auxiliar = detectorD(fonda, N);
+        
+            if (find == 0 &&  auxiliar >= pd) 
+            {
+                pd = auxiliar;
+
+             //   t = j;
+            } 
+            else if ((pd - auxiliar) > 0.001) 
+            {
+                find = 1;
+            } 
 
         }
 
+           
+            pd = pd / normamedir;
+    
+            mT = 0;
 
-        fprintf(prueba, "%i, %f", chivato, tiempillo[chivato]);
-        fprintf(prueba, "\n");
-
-       
-
- //       printf("%.20f,", tiempillo[chivato]); 
-
-}
+            m=1000;
+            //proceso de medicion
+             for (int k = 0; k < m; k++) 
+            {
+                numaleatorio = aleatorio(); //Genero un número aleatorio
+        
+                if (numaleatorio < pd) 
+                {
+                    mT = mT + 1;
+                }
+            }
 
 K=(0.0+mT)/m;
-apartadotres=apartadotres/m;
 printf("para lambda ");
 printf("%f,", lambda); 
 printf(" el coeficiente calculado es: ");
-printf("%f,", K); 
+printf("%.10f,", K); 
 printf("\n"); 
-printf("%i,", chivato2);
+
 printf("%i,", mT);
-printf("%i,", m);
-printf("\n"); 
+
 printf("apartado tres (promedio de Pd(nd)): ");
-printf("%f", apartadotres); 
+printf("%f", pd); 
+
+printf("Valor estimado de la posicion ");
+printf("%f", posicion); 
 
     //cerramos fichero de salida
         fclose(archivo);
         fclose(normadata);
         fclose(prueba);
+        fclose(pos);
+        fclose(tiempo);
 
     // Liberar la memoria dinamica
     free(V);
@@ -247,20 +286,20 @@ printf("%f", apartadotres);
     return 0;
 }
 
-double detectorD(double complex *psi, int N)
-{
-    int j;
-    double PD=0.;
-
-    for (j=4*N/5; j<=N; j++)
-    {
-        PD+= cabs(psi[j])*cabs(psi[j]);
-    }
-
-    return  PD;
-}
-
 double aleatorio() 
 {
     return (double)rand() / (double)RAND_MAX;
+}
+
+double detectorD(double complex* psi, int N) 
+{
+    double PD = 0;
+    int i;
+
+    for ( i = N - 100; i <= N ; i++) 
+    {
+        PD += cabs(psi[i]) * cabs(psi[i]);
+    }
+
+    return PD;
 }
