@@ -10,6 +10,7 @@
 
 double detectorD(double complex *psi, int N);
 double aleatorio();
+void Nbarerras(double *potencial, double lambda, double ko , int barreras, int width, int dist, int N) ;
 
 int main(void)
 {
@@ -20,15 +21,17 @@ int main(void)
     int find, activarpos;
     double iteracioncinetica=0;
     double normacinetica=0;
+    //para el apartado de n barreras
+    int nbarreras, ancho, separacion;
+    nbarreras=12;
+    ancho=100;
+    separacion=150;
 
     //inicializamos valores
     find=0;
     pd=0;
     posicion=0.;
     cinetica=0;
-
-    //si queremos calcular la posicion ponemos activarpos=1 si no le ponemos cualq otro valor por ejemplo 0
-    activarpos=1;
 
      //Inicializo el valor de la serie de números aleatorios
     srand(time(NULL));
@@ -80,8 +83,9 @@ int main(void)
     
     //definimos N
     N = 1000;
+   // N=(600+ancho+(nbarreras-1)*separacion); // N si se usan nbarreras
     //  p=1000;
-    p=2000;
+    p=6*50000;
 
     // Asignar memoria para los vectores
     alpha = (double complex *)malloc((N + 1)*sizeof(double complex));
@@ -124,6 +128,8 @@ int main(void)
         fonda[j] = fonda[j]/sqrt(norm);
     }
 
+
+    
     // Potencial Vj vale 0 fuera del intervalo 2N/5,3N/5
     for(i = 0; i < (2 * N / 5); i++)
     {
@@ -139,6 +145,11 @@ int main(void)
     {
         V[i] = 0.;
     }
+    
+
+
+   //ACTIVAR SI QUEREMOS N BARRERAS 
+  //  Nbarerras(V,lambda, k_0 , nbarreras,  ancho, separacion - ancho,  N);
 
     //condiciones de contorno para los auxiliares
     chi[N] = 0.0;
@@ -175,7 +186,6 @@ int main(void)
             fprintf(normadata, "\n");
 
             //calculamos posicion y energia
-
             //posicion
                 iteracion=normapos=0.;
 
@@ -255,8 +265,6 @@ int main(void)
             if (find == 0 &&  auxiliar >= pd) 
             {
                 pd = auxiliar;
-
-             //   t = j;
             } 
             else if ((pd - auxiliar) > 0.001) 
             {
@@ -319,7 +327,7 @@ double aleatorio()
     return (double)rand() / (double)RAND_MAX;
 }
 
-double detectorD(double complex* psi, int N) 
+double detectorD(double complex* psi, int N)
 {
     double PD = 0;
     int i;
@@ -330,4 +338,29 @@ double detectorD(double complex* psi, int N)
     }
 
     return PD;
+}
+
+//funcion que recibe el potencial, lambda, k0 el numero de barreras, el ancho de estas, la distancia entre estas, el N redefinido y pone N barreras de potencial
+void Nbarerras(double *potencial, double lambda, double ko , int barreras, int width, int dist, int N) 
+{
+     
+    for (int j = 0; j < 300; j++) 
+    {
+        potencial[j] = 0;
+    }
+
+    for (int g = 0; g < barreras; g++) 
+    {
+        for (int p = 300 + g * width + g * dist; p < 300 + (g  + 1) * width + (g  + 1) * dist; p++) 
+        {
+            if (p > (300 + g * width + g * dist) && p < (300 + ( g+ 1) * width + g * dist)) 
+            {
+                potencial[p] = lambda * ko * ko;
+            } 
+            else 
+            {
+                potencial[p] = 0.0;
+            }
+        }
+    }
 }
