@@ -79,7 +79,7 @@ int main(void)
     L = 4; // tamaño de la caja
     N = 16; // numero de particulas
     filas = N;
-    numiter=10000; //numero de iteraciones del gas
+    numiter=100000; //numero de iteraciones del gas
     inicio=20; //inicio para histograma velocidades
     fin=50; //fin para histograma velocidades
     momentillo=0.0; // inicializamos el momento
