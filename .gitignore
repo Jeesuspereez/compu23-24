@@ -52,6 +52,7 @@
 *.i*86
 *.x86_64
 *.hex
+*.pdf
 
 # Debug files
 *.dSYM/

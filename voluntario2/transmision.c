@@ -14,16 +14,18 @@ double aleatorio();
 int main(void)
 {
     //declaracion de variables
-    int i, N, j, n, nciclos, p, m, mT, y;
-    double complex *fonda, *beta, *alpha, *A_0, *chi;
-    double lambda, h, x_0, sigma, *V, k_0, s, norm, numaleatorio, aux, *tiempillo, K, apartadotres, pd, auxiliar, normamedir, posicion, energia, iteracion, normapos;
+    int i, N, j, n, nciclos, p, m, mT, y, zz;
+    double complex *fonda, *beta, *alpha, *A_0, *chi, *operadorenergia, *fondaaux, *derivadafonda, *segundaderiv;
+    double lambda, h, x_0, sigma, *V, k_0, s, norm, numaleatorio, aux, K, apartadotres, pd, auxiliar, normamedir, posicion, cinetica, iteracion, normapos;
     int find, activarpos;
+    double iteracioncinetica=0;
+    double normacinetica=0;
 
     //inicializamos valores
     find=0;
     pd=0;
     posicion=0.;
-    energia=0;
+    cinetica=0;
 
     //si queremos calcular la posicion ponemos activarpos=1 si no le ponemos cualq otro valor por ejemplo 0
     activarpos=1;
@@ -57,10 +59,10 @@ int main(void)
     }
 
     //abrimos arhcivo de salida
-    FILE *prueba;
-    prueba = fopen("tiempillo.txt", "w");
+    FILE *energy;
+    energy = fopen("cinetica.txt", "w");
 
-    if (prueba == NULL) {
+    if (energy == NULL) {
         printf("Error al abrir el archivo.\n");
         return 1;
     }
@@ -84,17 +86,13 @@ int main(void)
     // Asignar memoria para los vectores
     alpha = (double complex *)malloc((N + 1)*sizeof(double complex));
     V = (double *)malloc((N + 1)*sizeof(double));
-    tiempillo = (double *)malloc((p + 10)*sizeof(double));
     fonda = (double complex *)malloc((N + 1)*sizeof(double complex));
     chi = (double complex *)malloc((N + 1)*sizeof(double complex));
     beta =(double complex *)malloc((N + 1)*sizeof(double complex));
-
-    //inicializamos tiempillo
-    for( y=0; y<p+1 ; y++)
-    {
-        tiempillo[y]=0.;
-    }
-
+    operadorenergia = (double complex *)malloc((N + 1)*sizeof(double complex));
+    fondaaux = (double complex *)malloc((N + 1)*sizeof(double complex));
+    derivadafonda = (double complex *)malloc((N + 1)*sizeof(double complex));
+    segundaderiv = (double complex *)malloc((N + 1)*sizeof(double complex));
 
     //parametros a cambiar: lambda, nciclos y N
 
@@ -103,7 +101,7 @@ int main(void)
     nciclos=50.;
     h=0.01;
     norm=0.;
-    lambda = 0.3;
+    lambda = 0.4;
     k_0 = (2.*PI*nciclos)/(N+0.);
     s = 1./(4.*k_0 *k_0);
     //parametros distribucion
@@ -181,6 +179,7 @@ int main(void)
             //posicion
                 iteracion=normapos=0.;
 
+                //calculamos el operador
                  for (int g = 0; g <= N; g++)
                 {
                     iteracion += cabs(fonda[g])*g;
@@ -195,31 +194,61 @@ int main(void)
             fprintf(tiempo, "%i\n", n);
 
             //energia
+                //calculamos el operador energia
+                for (zz = 0; zz <= N; zz++)
+                    {
+                        operadorenergia[zz] =creal(fonda[zz]) - I*cimag(fonda[zz]);
+                    }
 
-            /*
-            double suma=0;
-            double norma=0;
-            for (int i = 0; i < N+1; i++)
+                //calculamos la derivada 
+                for (int i = 0; i <= N; i++)
+                {
+                    if (i!=N)
+                    {
+                        derivadafonda[i] = fonda[i+1] - fonda[i];
+                    }
+                    else
+                    {
+                        derivadafonda[i] = 0.0;
+                    }
+        
+                }
+
+                //y su segunda derivada
+                for (int g = 0; g <= N; g++)
+                {
+                    if (g!=N)
+                    {
+                        segundaderiv[g] = derivadafonda[g+1] - derivadafonda[g]; 
+                    }
+                    else
+                    {
+                        segundaderiv[g] = 0.0;
+                    }
+        
+                }
+
+            iteracioncinetica=0;
+            normacinetica=0;
+            //calculamos definitivamente la energia cinetica
+            for (int i = 0; i <= N; i++)
             {
-                suma += -creal(psi2[i]*D2psi[i]);
-                norma += cabs(psi2[i]);
+                iteracioncinetica += -creal(operadorenergia[i]*segundaderiv[i]);
+                normacinetica += cabs(operadorenergia[i]);
             }
 
-            return suma/(2*norma); 
+            cinetica = iteracioncinetica/(2*normacinetica); 
 
-            }*/
+            fprintf(energy, "%f\n", cinetica);
 
             //buscamos el maximo
             //calculamos la norma total
             normamedir = 0.0;
 
-            for (int i = 0; i < N + 1; i++) 
+            for (int i = 0; i <= N ; i++) 
             {
             normamedir += cabs(fonda[i]) * cabs(fonda[i]);
             }
-
-          
-
 
             auxiliar = detectorD(fonda, N);
         
@@ -236,7 +265,6 @@ int main(void)
 
         }
 
-           
             pd = pd / normamedir;
     
             mT = 0;
@@ -265,13 +293,10 @@ printf("%i,", mT);
 printf("apartado tres (promedio de Pd(nd)): ");
 printf("%f", pd); 
 
-printf("Valor estimado de la posicion ");
-printf("%f", posicion); 
-
     //cerramos fichero de salida
         fclose(archivo);
         fclose(normadata);
-        fclose(prueba);
+        fclose(energy);
         fclose(pos);
         fclose(tiempo);
 
@@ -281,7 +306,10 @@ printf("%f", posicion);
     free(chi);
     free(fonda);
     free(beta);
-    free(tiempillo);
+    free(operadorenergia);
+    free(derivadafonda);
+    free(fondaaux);
+    free(segundaderiv);
 
     return 0;
 }
