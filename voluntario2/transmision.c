@@ -85,7 +85,7 @@ int main(void)
     N = 1000;
    // N=(600+ancho+(nbarreras-1)*separacion); // N si se usan nbarreras
     //  p=1000;
-    p=6*50000;
+    p=2*50000;
 
     // Asignar memoria para los vectores
     alpha = (double complex *)malloc((N + 1)*sizeof(double complex));
